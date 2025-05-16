@@ -1,0 +1,46 @@
+.agenda-panel {
+    position: fixed;
+    top: 100px; /* adjust as needed to avoid the navbar */
+    right: 0;
+    height: auto;
+    max-height: 80vh;
+    max-width: 30vw;
+    background-color: var(--color-ivory, #fdfdf6);
+    box-shadow: -2px 0 6px rgba(0, 0, 0, 0.2);
+    border-left: 1px solid #ccc;
+    border-radius: 8px 0 0 8px;
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+    z-index: 999;
+}
+
+.agenda-panel.open {
+    transform: translateX(0);
+}
+
+.toggle-button {
+    position: absolute;
+    left: -34px;
+    top: 20px;
+    background-color: var(--color-crimson, #8a1f2d);
+    color: white;
+    border: none;
+    border-radius: 5px 0 0 5px;
+    padding: 4px 8px;
+    cursor: pointer;
+    font-size: 20px;
+    z-index: 1000;
+}
+
+.agenda-content {
+    padding: 16px;
+    font-size: 90%;
+}
+
+.agenda-content ul {
+    padding-left: 1em;
+}
+
+.agenda-content li {
+    margin-bottom: 0.5em;
+}

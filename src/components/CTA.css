@@ -1,0 +1,29 @@
+@import '../variables.css';
+
+.cta {
+    text-align: center;
+    padding: 3rem 2rem;
+    background-color: var(--color-ivory);
+}
+
+.register-button {
+    background-color: var(--color-crimson);
+    color: white;
+    padding: 0.75rem 2rem;
+    font-size: 1rem;
+    font-weight: bold;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.register-button:hover {
+    background-color: var(--color-dark-crimson);
+}
+
+.small-text {
+    margin-top: 1rem;
+    font-size: 0.9rem;
+    color: #444;
+}

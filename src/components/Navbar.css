@@ -1,0 +1,55 @@
+@import '../variables.css';
+
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 2rem;
+    background-color: var(--color-navy);
+    color: white;
+}
+
+.logo {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: white;
+}
+
+.nav-links {
+    list-style: none;
+    display: flex;
+    gap: 1.5rem;
+}
+
+.nav-links li * {
+    cursor: pointer;
+    color: white;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 90%;
+}
+
+.nav-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.login {
+    background: transparent;
+    color: white;
+    border: 1px solid white;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.register {
+    background-color: var(--color-crimson);
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    text-decoration: none;
+}

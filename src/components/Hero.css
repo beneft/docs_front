@@ -1,0 +1,18 @@
+@import '../variables.css';
+
+.hero {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: var(--color-ivory);
+}
+
+.hero h1 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    color: var(--color-navy);
+}
+
+.hero p {
+    font-size: 1.1rem;
+    color: #2C2C2C;
+}

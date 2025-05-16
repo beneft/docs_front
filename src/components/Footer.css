@@ -1,0 +1,9 @@
+@import '../variables.css';
+
+.footer {
+    padding: 2rem;
+    text-align: center;
+    background-color: var(--color-navy);
+    font-size: 0.7rem;
+    color: white;
+}

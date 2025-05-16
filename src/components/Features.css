@@ -1,0 +1,45 @@
+@import '../variables.css';
+
+.features {
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+    padding: 3rem 2rem;
+    background: var(--color-ivory);
+}
+
+.feature {
+    flex: 1 1 250px;
+    text-align: center;
+    padding: 1.5rem;
+    margin: 1rem;
+    border: 1px solid #eaeaea;
+    border-radius: 8px;
+    background-color: var(--color-light-gray);
+    box-shadow: 0 0 6px rgba(0, 0, 0, 0.03);
+    transition: transform 0.3s ease;
+}
+
+.feature p {
+    font-size: 80%;
+}
+
+.feature:hover {
+    transform: translateY(-5px);
+}
+
+.icon {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    color: var(--color-crimson);
+}
+
+.feature h3 {
+    margin-bottom: 0.5rem;
+    font-size: 1.25rem;
+    color: var(--color-navy);
+}
+
+.feature p {
+    color: #2C2C2C;
+}
