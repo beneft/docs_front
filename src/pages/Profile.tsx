@@ -123,7 +123,7 @@ const Profile: React.FC = () => {
                     {isDocFile ? (
                         <div className="doc-placeholder">No preview for DOC/DOCX</div>
                     ) : (
-                        <iframe src={openedDocument.previewUrl} title={openedDocument.name} className="doc-preview" />
+                        <iframe src={openedDocument.previewUrl} title={openedDocument.name} className="preview-frame" />
                     )}
                     <button className="floating-sign-btn" onClick={() => setShowSignModal(true)}>Sign</button>
                     {showSignModal && openedDocument && (
@@ -138,8 +138,8 @@ const Profile: React.FC = () => {
             return (
                 <PaperBasketSection
                     title={selected!}
-                    //items={dummyDocs}
-                    items={documents}
+                    items={dummyDocs}
+                    //items={documents}
                     onItemClick={(doc) => setOpenedDocument(doc)}
                 />
             );
