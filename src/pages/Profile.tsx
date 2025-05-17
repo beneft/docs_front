@@ -21,10 +21,11 @@ const Profile: React.FC = () => {
     useEffect(() => {
         fetch('http://localhost:8082/documents/metadata')
             .then(res => res.json())
-            .then((data: { id: string; name: string }[]) => {
+            .then((data: { id: string; name: string; contentType: string }[]) => {
                 const fullDocs = data.map(d => ({
                     id: d.id,
                     name: d.name,
+                    contentType: d.contentType,
                     previewUrl: `http://localhost:8082/documents/${d.id}`
                 }));
                 setDocuments(fullDocs);
@@ -33,9 +34,9 @@ const Profile: React.FC = () => {
     }, []);
 
     const dummyDocs: DocumentItem[] = [
-        { id: '1', name: 'Contracthhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh Draft', previewUrl: 'https://example.com/doc1' },
-        { id: '2', name: 'Invoice 2024', previewUrl: 'https://example.com/doc2' },
-        { id: '3', name: 'Proposal XYZ', previewUrl: 'https://example.com/doc3' },
+        { id: '1', name: 'Contracthhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh Draft', contentType:"application/pdf", previewUrl: 'https://example.com/doc1' },
+        { id: '2', name: 'Invoice 2024', contentType:"application/pdf",previewUrl: 'https://example.com/doc2' },
+        { id: '3', name: 'Proposal XYZ', contentType:"application/pdf",previewUrl: 'https://example.com/doc3' },
     ];
 
     const handleDocumentUpload = (file: File, url: string) => {
@@ -115,8 +116,8 @@ const Profile: React.FC = () => {
         } else if (selected === 'create') {
             return <UploadArea onUpload={handleDocumentUpload} />;
         } else if (openedDocument) {
-            const ext = openedDocument.name.split('.').pop()?.toLowerCase();
-            const isDocFile = ext === 'doc' || ext === 'docx';
+            const isDocFile = openedDocument.contentType === 'application/msword' ||
+                openedDocument.contentType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
             return (
                 <div className="preview-wrapper">
                     {isDocFile ? (

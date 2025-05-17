@@ -4,6 +4,7 @@ import './PaperBasketSection.css';
 export interface DocumentItem {
     id: string;
     name: string;
+    contentType: string;
     previewUrl: string;
 }
 
@@ -19,8 +20,8 @@ const PaperBasketSection: React.FC<PaperBasketSectionProps> = ({ title, items, o
             <h2>{title}</h2>
             <div className="document-grid">
                 {items.map((doc) => {
-                    const ext = doc.name.split('.').pop()?.toLowerCase();
-                    const isDocFile = ext === 'doc' || ext === 'docx';
+                    const isDocFile = doc.contentType === 'application/msword' ||
+                        doc.contentType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
 
                     return (
                         <div key={doc.id} className="document-item" onClick={() => onItemClick?.(doc)}>
