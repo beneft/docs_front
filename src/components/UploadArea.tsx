@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import './UploadArea.css';
 
-const UploadArea: React.FC<{ onUpload: (url: string) => void }> = ({ onUpload }) => {
+const UploadArea: React.FC<{ onUpload: (file: File, url: string) => void }> = ({ onUpload }) => {
     const [fileUrl, setFileUrl] = useState<string | null>(null);
     const [dragging, setDragging] = useState(false);
     const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -9,7 +9,7 @@ const UploadArea: React.FC<{ onUpload: (url: string) => void }> = ({ onUpload })
     const handleFile = (file: File) => {
         const url = URL.createObjectURL(file);
         setFileUrl(url);
-        onUpload(url);
+        onUpload(file, url);
     };
 
     const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {

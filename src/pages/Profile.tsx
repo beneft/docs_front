@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import '../styles/Profile.css';
 import UploadArea from '../components/UploadArea';
 import PaperBasketSection from '../components/PaperBasketSection';
@@ -9,11 +9,28 @@ import SignerList from "../components/SignerList";
 const Profile: React.FC = () => {
     const [selected, setSelected] = useState<string | null>(null);
     const [basketOpen, setBasketOpen] = useState(false);
+    const [uploadedFile, setUploadedFile] = useState<File | null>(null);
     const [documentUrl, setDocumentUrl] = useState<string | null>(null);
     const [documentStep, setDocumentStep] = useState<1 | 2 | null>(null);
     const [documentName, setDocumentName] = useState<string>('');
+    const [documents, setDocuments] = useState<DocumentItem[]>([]);
     const [openedDocument, setOpenedDocument] = useState<DocumentItem | null>(null);
     const [showSignModal, setShowSignModal] = useState(false);
+    const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        fetch('http://localhost:8082/documents/metadata')
+            .then(res => res.json())
+            .then((data: { id: string; name: string }[]) => {
+                const fullDocs = data.map(d => ({
+                    id: d.id,
+                    name: d.name,
+                    previewUrl: `http://localhost:8082/documents/${d.id}`
+                }));
+                setDocuments(fullDocs);
+            })
+            .catch(console.error);
+    }, []);
 
     const dummyDocs: DocumentItem[] = [
         { id: '1', name: 'Contract Draft', previewUrl: 'https://example.com/doc1' },
@@ -21,26 +38,58 @@ const Profile: React.FC = () => {
         { id: '3', name: 'Proposal XYZ', previewUrl: 'https://example.com/doc3' },
     ];
 
-    const handleDocumentUpload = (url: string) => {
+    const handleDocumentUpload = (file: File, url: string) => {
+        setUploadedFile(file);
         setDocumentUrl(url);
+        setDocumentName(file.name);
         setDocumentStep(1);
     };
 
     const clearDocument = () => {
+        setLoading(false);
         setDocumentUrl(null);
         setDocumentStep(null);
         setDocumentName('');
     };
 
-    const proceedToDrafts = () => {
-        clearDocument();
-        setSelected('Drafts');
-        setBasketOpen(true);
+    const proceedToDrafts = async () => {
+        setLoading(true);
+        if (!uploadedFile || !documentName) {
+            alert('Please upload a file and name it.');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('file', uploadedFile);
+        formData.append('metadata', JSON.stringify({
+            name: documentName,
+            uploaderId: '666'
+        }));
+
+        try {
+            const response = await fetch('http://localhost:8082/documents', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!response.ok) {
+                throw new Error(`Upload failed: ${response.statusText}`);
+            }
+
+            alert('Document uploaded successfully!');
+            clearDocument();
+            setSelected('Drafts');
+            setBasketOpen(true);
+        } catch (err) {
+            console.error(err);
+            alert('Error uploading document');
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleSectionSelect = (section: string) => {
         setSelected(section);
-        // Clear all contextual right panel state
         setDocumentStep(null);
         setDocumentUrl('');
         setOpenedDocument(null);
@@ -70,14 +119,20 @@ const Profile: React.FC = () => {
                 <div className="preview-wrapper">
                     <iframe src={openedDocument.previewUrl} className="preview-frame" title="Preview" />
                     <button className="floating-sign-btn" onClick={() => setShowSignModal(true)}>Sign</button>
-                    {showSignModal && <SignModal onClose={() => setShowSignModal(false)} />}
+                    {showSignModal && openedDocument && (
+                        <SignModal
+                            onClose={() => setShowSignModal(false)}
+                            openedDocument={openedDocument}
+                        />
+                    )}
                 </div>
             );
         } else if (['Sent', 'Received', 'Closed', 'Drafts', 'Archive', 'Deleted'].includes(selected || '')) {
             return (
                 <PaperBasketSection
                     title={selected!}
-                    items={dummyDocs}
+                    //items={dummyDocs}
+                    items={documents}
                     onItemClick={(doc) => setOpenedDocument(doc)}
                 />
             );
@@ -105,7 +160,7 @@ const Profile: React.FC = () => {
                 <div className="right-controls">
                     <button onClick={() => setDocumentStep(1)}>Back to step 1</button>
                     <p><br></br>Almost done. Click below to finish and save to Drafts.</p>
-                    <button onClick={proceedToDrafts}>Finish</button>
+                    <button onClick={proceedToDrafts}>Finish{loading && <span className="spinner" />}</button>
                 </div>
             );
         } else if (openedDocument) {

@@ -1,10 +1,28 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './SignModal.css';
 import { signDocumentWithNCALayer } from './NCALayerSigner';
+import { DocumentItem } from './PaperBasketSection';
 
-const SignModal = ({ onClose }: { onClose: () => void }) => {
+const SignModal = ({
+                       onClose,
+                       openedDocument,
+                   }: {
+    onClose: () => void;
+    openedDocument: DocumentItem;
+}) => {
     const [tab, setTab] = useState<'eds' | 'qr'>('eds');
     const [loading, setLoading] = useState(false);
+    const openedDocumentBlob = useRef<Blob | null>(null);
+
+    useEffect(() => {
+        if (openedDocument) {
+            fetch(openedDocument.previewUrl)
+                .then(res => res.blob())
+                .then(blob => {
+                    openedDocumentBlob.current = blob;
+                });
+        }
+    }, [openedDocument]);
 
     return (
         <div className="sign-modal-overlay">
@@ -27,20 +45,15 @@ const SignModal = ({ onClose }: { onClose: () => void }) => {
                                 onClick={async () => {
                                     setLoading(true);
                                     try {
-                                        const base64Data = await new Promise<string>((resolve, reject) => {
-                                            const dummyContent = "Hello, this is a test document.";
-                                            const blob = new Blob([dummyContent], { type: "application/pdf" });
-                                            const reader = new FileReader();
-                                            reader.onload = () => resolve((reader.result as string).split(',')[1]);
-                                            reader.onerror = reject;
-                                            reader.readAsDataURL(blob);
-                                        });
-
-                                        const signature = await signDocumentWithNCALayer(base64Data);
-                                        if (signature) {
-                                            console.log("Подпись получена:", signature);
-                                            // TODO: send or save signature
-                                        }
+                                        const blob = openedDocumentBlob.current;
+                                        if (!blob) throw new Error("No document loaded.");
+                                        const reader = new FileReader();
+                                        reader.onload = async () => {
+                                            const base64 = (reader.result as string).split(',')[1];
+                                            const signature = await signDocumentWithNCALayer(base64);
+                                            console.log("Signature:", signature);
+                                        };
+                                        reader.readAsDataURL(blob);
                                     } catch (err) {
                                         console.error(err);
                                     } finally {
