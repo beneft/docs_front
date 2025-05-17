@@ -172,34 +172,48 @@
     padding: 0;
     margin-top: 1em;
 }
+
 .signer-item {
-    display: flex;
-    align-items: center;
-    justify-content: stretch;
-    flex-wrap: wrap;;
-    padding: 0.5em 0;
     border-bottom: 1px solid #ddd;
-    width: 100%;
+    padding: 0.5em 0;
 }
-.signer-status {
-    margin-left: auto;
-    margin-right: 1em;
+
+.signer-main {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: nowrap;
+}
+
+.signer-left {
+    flex: 1 1 auto;
+    min-width: 0;
+    word-break: break-word;
+}
+
+.signer-name {
+    display: block;
     font-weight: bold;
 }
 
-.signer-actions{
+.signer-status {
+    margin-left: 1em;
+    white-space: nowrap;
+    font-weight: bold;
+}
+
+.signer-actions {
+    margin-top: 0.25em;
     display: flex;
     flex-direction: column;
 }
 
 .signer-actions button {
-    margin-left: 0.5em;
     background-color: transparent;
     color: black;
     text-align: start;
-    margin-top: 0;
-    margin-bottom: 0;
     padding: 0;
+    margin: 0;
 }
 
 /* dropdown */

@@ -4,6 +4,7 @@ import UploadArea from '../components/UploadArea';
 import PaperBasketSection from '../components/PaperBasketSection';
 import type { DocumentItem } from '../components/PaperBasketSection';
 import SignModal from "../components/SignModal";
+import SignerList from "../components/SignerList";
 
 const Profile: React.FC = () => {
     const [selected, setSelected] = useState<string | null>(null);
@@ -59,6 +60,7 @@ const Profile: React.FC = () => {
                     <label><input type="checkbox" /> Requires Signature</label><br />
                     <label><input type="checkbox" /> Send Notification</label><br />
                     {/* Add more options as needed */}
+                    <SignerList></SignerList>
                 </div>
             );
         } else if (selected === 'create') {
@@ -115,21 +117,25 @@ const Profile: React.FC = () => {
                     <ul className="signer-list">
                         {/* Placeholder signees list */}
                         {[
-                            { name: 'Alice Johnson', status: 'Signed', you: false },
+                            { name: 'Alice Johnsonввввввввввввввввввввввввввввввввввввв', status: 'Signed', you: false },
                             { name: 'Bob Smith', status: 'Pending', you: false },
                             { name: 'You', status: 'Pending', you: true }
                         ].map((signee, index) => (
                             <li key={index} className="signer-item">
-                                <strong className="signer-name">{signee.name}</strong>
-                                <span className={`signer-status ${signee.status.toLowerCase()}`}>
-                            {signee.status === 'Signed' ? '✔️' : '⏳'} {signee.status}
-                                </span>
-                                {!signee.you && (
-                                    <div className="signer-actions">
-                                <button>Edit Deputy</button>
-                                <button>Contact</button>
+                                <div className="signer-main">
+                                    <div className="signer-left">
+                                        <strong className="signer-name">{signee.name}</strong>
+                                        {!signee.you && (
+                                            <div className="signer-actions">
+                                                <button>Edit Deputy</button>
+                                                <button>Contact</button>
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className={`signer-status ${signee.status.toLowerCase()}`}>
+                                        {signee.status === 'Signed' ? '✔️' : '⏳'} {signee.status}
+                                    </div>
                                 </div>
-                                )}
                             </li>
                         ))}
                     </ul>
