@@ -33,7 +33,7 @@ const Profile: React.FC = () => {
     }, []);
 
     const dummyDocs: DocumentItem[] = [
-        { id: '1', name: 'Contract Draft', previewUrl: 'https://example.com/doc1' },
+        { id: '1', name: 'Contracthhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh Draft', previewUrl: 'https://example.com/doc1' },
         { id: '2', name: 'Invoice 2024', previewUrl: 'https://example.com/doc2' },
         { id: '3', name: 'Proposal XYZ', previewUrl: 'https://example.com/doc3' },
     ];
@@ -115,9 +115,15 @@ const Profile: React.FC = () => {
         } else if (selected === 'create') {
             return <UploadArea onUpload={handleDocumentUpload} />;
         } else if (openedDocument) {
+            const ext = openedDocument.name.split('.').pop()?.toLowerCase();
+            const isDocFile = ext === 'doc' || ext === 'docx';
             return (
                 <div className="preview-wrapper">
-                    <iframe src={openedDocument.previewUrl} className="preview-frame" title="Preview" />
+                    {isDocFile ? (
+                        <div className="doc-placeholder">No preview for DOC/DOCX</div>
+                    ) : (
+                        <iframe src={openedDocument.previewUrl} title={openedDocument.name} className="doc-preview" />
+                    )}
                     <button className="floating-sign-btn" onClick={() => setShowSignModal(true)}>Sign</button>
                     {showSignModal && openedDocument && (
                         <SignModal

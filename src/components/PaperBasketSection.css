@@ -35,4 +35,6 @@
 .doc-name {
     margin-top: 0.5rem;
     font-weight: 500;
+    max-width: 100%;
+    overflow-wrap: anywhere;
 }
