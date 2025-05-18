@@ -38,3 +38,8 @@
     max-width: 100%;
     overflow-wrap: anywhere;
 }
+
+.doc-placeholder {
+    height: 200px;
+    text-align: center;
+}

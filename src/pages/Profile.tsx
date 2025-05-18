@@ -19,6 +19,10 @@ const Profile: React.FC = () => {
     const [openedDocument, setOpenedDocument] = useState<DocumentItem | null>(null);
     const [showSignModal, setShowSignModal] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [templates, setTemplates] = useState<DocumentItem[]>([]);
+    const [openedTemplate, setOpenedTemplate] = useState<DocumentItem | null>(null);
+    const [templateFields, setTemplateFields] = useState<{ name: string; type: string; }[]>([]);
+    const [fieldValues, setFieldValues] = useState<{ [key: string]: string }>({});
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -34,6 +38,18 @@ const Profile: React.FC = () => {
                 setDocuments(fullDocs);
             })
             .catch(console.error);
+    }, []);
+
+    useEffect(() => {
+        fetch('http://localhost:8082/templates/metadata')
+            .then(res => res.json())
+            .then((data: DocumentItem[]) => {
+                const mapped = data.map(d => ({
+                    ...d,
+                    previewUrl: `http://localhost:8082/templates/${d.id}`
+                }));
+                setTemplates(mapped);
+            });
     }, []);
 
     const dummyDocs: DocumentItem[] = [
@@ -102,6 +118,19 @@ const Profile: React.FC = () => {
         setDocumentName('');
     };
 
+    const handleTemplateClick = async (template: DocumentItem) => {
+        setOpenedTemplate(template);
+        setTemplateFields([]);
+        setFieldValues({});
+        try {
+            const response = await fetch(`http://localhost:8082/templates/${template.id}/fields`);
+            const fields = await response.json(); // expected format: [{ name: 'clientName', type: 'text' }, ...]
+            setTemplateFields(fields);
+        } catch (e) {
+            console.error("Failed to fetch fields", e);
+        }
+    };
+
     const renderContent = () => {
         if (documentStep === 1 && documentUrl) {
             if (documentType === 'application/pdf') {
@@ -159,7 +188,28 @@ const Profile: React.FC = () => {
                 />
             );
         } else if (selected === 'templates') {
+            if (openedTemplate) {
+                const isDoc = openedTemplate.contentType.includes('word');
 
+                return (
+                    <div className="preview-wrapper">
+                        {isDoc ? (
+                            <div className="doc-placeholder">DOC/DOCX not previewable</div>
+                        ) : (
+                            <iframe src={openedTemplate.previewUrl} title={openedTemplate.name}
+                                    className="preview-frame"/>
+                        )}
+                    </div>
+                );
+            }
+
+            return (
+                <PaperBasketSection
+                    title="Templates"
+                    items={templates}
+                    onItemClick={handleTemplateClick}
+                />
+            )
         }
         else {
             return <div className="placeholder">Select an option from the left panel</div>;
@@ -219,6 +269,42 @@ const Profile: React.FC = () => {
                             </li>
                         ))}
                     </ul>
+                </div>
+            );
+        } else if (openedTemplate && templateFields.length > 0) {
+            return (
+                <div className="right-controls">
+                    <button className="back-button" onClick={() => setOpenedTemplate(null)}>← Back</button>
+                    <h2>Fill Template Fields</h2>
+                    {templateFields.map(field => (
+                        <div key={field.name} className="field-input">
+                            <label>{field.name}</label>
+                            <input
+                                type={field.type}
+                                value={fieldValues[field.name] || ''}
+                                onChange={(e) =>
+                                    setFieldValues(prev => ({ ...prev, [field.name]: e.target.value }))
+                                }
+                            />
+                        </div>
+                    ))}
+                    <button onClick={async () => {
+                        try {
+                            const res = await fetch(`http://localhost:8082/templates/${openedTemplate.id}/fill`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(fieldValues),
+                            });
+                            if (!res.ok) throw new Error('Failed to submit');
+                            alert('Template successfully filled!');
+                            setOpenedTemplate(null);
+                        } catch (e) {
+                            alert('Error submitting template');
+                            console.error(e);
+                        }
+                    }}>
+                        Submit
+                    </button>
                 </div>
             );
         }
