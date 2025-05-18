@@ -5,6 +5,7 @@ import Login from './pages/Login';
 import Home from './pages/Home';
 import Profile from './pages/Profile';
 import SignPage from "./pages/SignPage";
+import Verify from "./pages/Verify";
 
 const App: React.FC = () => {
   return (
@@ -15,6 +16,7 @@ const App: React.FC = () => {
               <Route path="/login" element={<Login />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/sign/:id" element={<SignPage />} />
+              <Route path="/verify" element={<Verify />} />
           </Routes>
       </Router>
   );

@@ -1,15 +1,24 @@
 import React, { useState, useRef } from 'react';
 import './UploadArea.css';
 
-const UploadArea: React.FC<{ onUpload: (file: File, url: string) => void }> = ({ onUpload }) => {
+const UploadArea: React.FC<{ onUpload: (file: File, url: string, fileType: string) => void }> = ({ onUpload }) => {
     const [fileUrl, setFileUrl] = useState<string | null>(null);
     const [dragging, setDragging] = useState(false);
     const fileInputRef = useRef<HTMLInputElement | null>(null);
+    const [fileType, setFileType] = useState<string | null>(null);
 
     const handleFile = (file: File) => {
         const url = URL.createObjectURL(file);
+        const extension = file.name.split('.').pop()?.toLowerCase();
+        const mime =
+            file.type ||
+            (extension === 'pdf' ? 'application/pdf' :
+                extension === 'docx' ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' :
+                    extension === 'doc' ? 'application/msword' : '');
+
         setFileUrl(url);
-        onUpload(file, url);
+        setFileType(mime);
+        onUpload(file, url, mime);
     };
 
     const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
@@ -20,7 +29,7 @@ const UploadArea: React.FC<{ onUpload: (file: File, url: string) => void }> = ({
     };
 
     const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-        e.preventDefault(); // Required to allow drop
+        e.preventDefault();
         setDragging(true);
     };
 
@@ -35,7 +44,13 @@ const UploadArea: React.FC<{ onUpload: (file: File, url: string) => void }> = ({
         if (file) handleFile(file);
     };
 
-    const reset = () => setFileUrl(null);
+    const reset = () => {
+        if (fileUrl) {
+            URL.revokeObjectURL(fileUrl);
+        }
+        setFileUrl(null);
+        setFileType(null);
+    };
 
     return (
         <div className="upload-wrapper">
@@ -74,7 +89,13 @@ const UploadArea: React.FC<{ onUpload: (file: File, url: string) => void }> = ({
                             />
                         </label>
                     </div>
-                    <iframe src={fileUrl} className="preview-frame" title="Preview" />
+                    {fileType && fileUrl && fileType === 'application/pdf' ? (
+                        <iframe src={fileUrl} className="preview-frame" title="Preview" />
+                    ) : (
+                        <div className="preview-message">
+                            <p>Preview not available for this file type.</p>
+                        </div>
+                    )}
                 </div>
             )}
         </div>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import '../styles/Profile.css';
 import UploadArea from '../components/UploadArea';
 import PaperBasketSection from '../components/PaperBasketSection';
@@ -11,12 +12,14 @@ const Profile: React.FC = () => {
     const [basketOpen, setBasketOpen] = useState(false);
     const [uploadedFile, setUploadedFile] = useState<File | null>(null);
     const [documentUrl, setDocumentUrl] = useState<string | null>(null);
+    const [documentType, setDocumentType] = useState<string | null>(null);
     const [documentStep, setDocumentStep] = useState<1 | 2 | null>(null);
     const [documentName, setDocumentName] = useState<string>('');
     const [documents, setDocuments] = useState<DocumentItem[]>([]);
     const [openedDocument, setOpenedDocument] = useState<DocumentItem | null>(null);
     const [showSignModal, setShowSignModal] = useState(false);
     const [loading, setLoading] = useState(false);
+    const navigate = useNavigate();
 
     useEffect(() => {
         fetch('http://localhost:8082/documents/metadata')
@@ -39,10 +42,11 @@ const Profile: React.FC = () => {
         { id: '3', name: 'Proposal XYZ', contentType:"application/pdf",previewUrl: 'https://example.com/doc3' },
     ];
 
-    const handleDocumentUpload = (file: File, url: string) => {
+    const handleDocumentUpload = (file: File, url: string, docType: string) => {
         setUploadedFile(file);
         setDocumentUrl(url);
         setDocumentName(file.name);
+        setDocumentType(docType);
         setDocumentStep(1);
     };
 
@@ -50,6 +54,7 @@ const Profile: React.FC = () => {
         setLoading(false);
         setDocumentUrl(null);
         setDocumentStep(null);
+        setDocumentType(null);
         setDocumentName('');
     };
 
@@ -99,9 +104,17 @@ const Profile: React.FC = () => {
 
     const renderContent = () => {
         if (documentStep === 1 && documentUrl) {
-            return (
-                <iframe src={documentUrl} className="preview-frame" title="Document Preview" />
-            );
+            if (documentType === 'application/pdf') {
+                return (
+                    <iframe src={documentUrl} className="preview-frame" title="Document Preview" />
+                );
+            } else {
+                return (
+                    <div className="preview-message">
+                        <p>Preview not available for this document type.</p>
+                    </div>
+                );
+            }
         } else if (documentStep === 2) {
             return (
                 <div className="document-settings">
@@ -115,6 +128,8 @@ const Profile: React.FC = () => {
             );
         } else if (selected === 'create') {
             return <UploadArea onUpload={handleDocumentUpload} />;
+        } else if (selected === 'verify') {
+            navigate('/verify');
         } else if (openedDocument) {
             const isDocFile = openedDocument.contentType === 'application/msword' ||
                 openedDocument.contentType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
@@ -143,7 +158,10 @@ const Profile: React.FC = () => {
                     onItemClick={(doc) => setOpenedDocument(doc)}
                 />
             );
-        } else {
+        } else if (selected === 'templates') {
+
+        }
+        else {
             return <div className="placeholder">Select an option from the left panel</div>;
         }
     };
@@ -225,6 +243,8 @@ const Profile: React.FC = () => {
                                 className={selected === 'info' ? 'active' : ''}>User Info</button>
                         <button onClick={() => handleSectionSelect('create')}
                                 className={selected === 'create' ? 'active' : ''}>Create Document</button>
+                        <button onClick={() => handleSectionSelect('verify')}
+                                className={selected === 'verify' ? 'active' : ''}>Verify Document</button>
 
                         <div className="dropdown">
                             <button
