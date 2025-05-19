@@ -1,5 +1,7 @@
 
 import './PaperBasketSection.css';
+import WordPreview from './WordPreview';
+
 
 export interface DocumentItem {
     id: string;
@@ -20,13 +22,12 @@ const PaperBasketSection: React.FC<PaperBasketSectionProps> = ({ title, items, o
             <h2>{title}</h2>
             <div className="document-grid">
                 {items.map((doc) => {
-                    const isDocFile = doc.contentType === 'application/msword' ||
-                        doc.contentType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+                    const isDocFile = doc.contentType.includes('msword') || doc.contentType.includes('officedocument.wordprocessingml.document');
 
                     return (
                         <div key={doc.id} className="document-item" onClick={() => onItemClick?.(doc)}>
                             {isDocFile ? (
-                                <div className="doc-placeholder">No preview for DOC/DOCX</div>
+                                <WordPreview fileUrl={doc.previewUrl} full={false} />
                             ) : (
                                 <iframe src={doc.previewUrl} title={doc.name} className="doc-preview" />
                             )}

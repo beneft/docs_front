@@ -12,19 +12,13 @@ import '../styles/Home.css';
 const Home: React.FC = () => {
     const { user , login } = useAuth();
 
-    useEffect(() => {
-        if (!user) {
-            login({ name: 'Test User' });
-        }
-    }, [user, login]);
-
     return (
         <>
             <Navbar />
             {user && <AgendaPanel />}
             <Hero />
             <Features />
-            <CTA />
+            {!user && <CTA />}
             {/* Add promotional sections here later */}
             <Footer />
         </>

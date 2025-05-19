@@ -1,0 +1,75 @@
+.word-preview {
+    width: 100%;
+    height: 200px;
+    overflow-y: auto;
+    border: 1px solid #ccc;
+    background: white;
+    box-sizing: border-box;
+    padding: 0.5em;
+}
+
+.word-preview-full {
+    height: 100% !important;
+}
+
+.word-preview-full > div {
+    transform: scale(1.0) !important;
+}
+
+.word-preview > div {
+    transform: scale(0.3);
+    transform-origin: top;
+    width: 100%;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Formatting support */
+.word-preview strong,
+.word-preview b {
+    font-weight: bold;
+}
+
+.word-preview em,
+.word-preview i {
+    font-style: italic;
+}
+
+.word-preview p {
+    margin: 0.5em 0;
+}
+
+/* Alignment */
+.word-preview p[style*="text-align:center"],
+.word-preview p[style*="text-align: center"] {
+    text-align: center !important;
+}
+
+.word-preview p[style*="text-align:right"],
+.word-preview p[style*="text-align: right"] {
+    text-align: right !important;
+}
+
+.word-preview p[style*="text-align:left"],
+.word-preview p[style*="text-align: left"] {
+    text-align: left !important;
+}
+
+.word-preview table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1em 0;
+    font-size: 0.8em; /* scale down a bit */
+}
+
+.word-preview th,
+.word-preview td {
+    border: 1px solid #999;
+    padding: 0.3em 0.5em;
+    text-align: left;
+}
+
+.word-preview th {
+    background-color: #eee;
+    font-weight: bold;
+}

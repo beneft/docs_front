@@ -6,6 +6,8 @@ import PaperBasketSection from '../components/PaperBasketSection';
 import type { DocumentItem } from '../components/PaperBasketSection';
 import SignModal from "../components/SignModal";
 import SignerList from "../components/SignerList";
+import WordPreview from "../components/WordPreview";
+import { useAuth } from '../context/AuthContext';
 
 const Profile: React.FC = () => {
     const [selected, setSelected] = useState<string | null>(null);
@@ -23,6 +25,7 @@ const Profile: React.FC = () => {
     const [openedTemplate, setOpenedTemplate] = useState<DocumentItem | null>(null);
     const [templateFields, setTemplateFields] = useState<{ name: string; type: string; }[]>([]);
     const [fieldValues, setFieldValues] = useState<{ [key: string]: string }>({});
+    const { user , login } = useAuth();
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -41,16 +44,23 @@ const Profile: React.FC = () => {
     }, []);
 
     useEffect(() => {
-        fetch('http://localhost:8082/templates/metadata')
-            .then(res => res.json())
-            .then((data: DocumentItem[]) => {
-                const mapped = data.map(d => ({
-                    ...d,
-                    previewUrl: `http://localhost:8082/templates/${d.id}`
-                }));
-                setTemplates(mapped);
-            });
+        fetchDocumentMetadata();
     }, []);
+
+    const fetchDocumentMetadata = () => {
+        fetch('http://localhost:8082/documents/metadata')
+            .then(res => res.json())
+            .then((data: { id: string; name: string; contentType: string }[]) => {
+                const fullDocs = data.map(d => ({
+                    id: d.id,
+                    name: d.name,
+                    contentType: d.contentType,
+                    previewUrl: `http://localhost:8082/documents/${d.id}`
+                }));
+                setDocuments(fullDocs);
+            })
+            .catch(console.error);
+    };
 
     const dummyDocs: DocumentItem[] = [
         { id: '1', name: 'Contracthhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh Draft', contentType:"application/pdf", previewUrl: 'https://example.com/doc1' },
@@ -83,10 +93,14 @@ const Profile: React.FC = () => {
 
         const formData = new FormData();
         formData.append('file', uploadedFile);
-        formData.append('metadata', JSON.stringify({
-            name: documentName,
-            uploaderId: '666'
-        }));
+        if (user != null) {
+            formData.append('metadata', JSON.stringify({
+                name: documentName,
+                uploaderId: user.id
+            }));
+        } else {
+            return null;
+        }
 
         try {
             const response = await fetch('http://localhost:8082/documents', {
@@ -100,6 +114,7 @@ const Profile: React.FC = () => {
 
             alert('Document uploaded successfully!');
             clearDocument();
+            fetchDocumentMetadata();
             setSelected('Drafts');
             setBasketOpen(true);
         } catch (err) {
@@ -139,9 +154,7 @@ const Profile: React.FC = () => {
                 );
             } else {
                 return (
-                    <div className="preview-message">
-                        <p>Preview not available for this document type.</p>
-                    </div>
+                    <WordPreview fileUrl={documentUrl} full={true} />
                 );
             }
         } else if (documentStep === 2) {
@@ -165,7 +178,7 @@ const Profile: React.FC = () => {
             return (
                 <div className="preview-wrapper">
                     {isDocFile ? (
-                        <div className="doc-placeholder">No preview for DOC/DOCX</div>
+                        <WordPreview fileUrl={openedDocument.previewUrl} full={true} />
                     ) : (
                         <iframe src={openedDocument.previewUrl} title={openedDocument.name} className="preview-frame" />
                     )}
@@ -182,8 +195,8 @@ const Profile: React.FC = () => {
             return (
                 <PaperBasketSection
                     title={selected!}
-                    items={dummyDocs}
-                    //items={documents}
+                    //items={dummyDocs}
+                    items={documents}
                     onItemClick={(doc) => setOpenedDocument(doc)}
                 />
             );
@@ -247,7 +260,7 @@ const Profile: React.FC = () => {
                     <ul className="signer-list">
                         {/* Placeholder signees list */}
                         {[
-                            { name: 'Alice Johnsonввввввввввввввввввввввввввввввввввввв', status: 'Signed', you: false },
+                            { name: 'Alice Johnson', status: 'Signed', you: false },
                             { name: 'Bob Smith', status: 'Pending', you: false },
                             { name: 'You', status: 'Pending', you: true }
                         ].map((signee, index) => (
@@ -317,7 +330,7 @@ const Profile: React.FC = () => {
             <div className="profile-nav">
                 <div className="nav-logo">DocFlow</div>
                 <a className="back-button" href="/">← Back</a>
-
+                {user && <div className="nav-logo">{user.name}</div>}
                 {documentStep ? (
                     <div className="step-header">
                         <p>📄 Document Creation</p>
