@@ -29,16 +29,16 @@ const Profile: React.FC = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        fetch('http://localhost:8082/documents/metadata')
+        fetch('http://localhost:8084/templates/metadata')
             .then(res => res.json())
             .then((data: { id: string; name: string; contentType: string }[]) => {
                 const fullDocs = data.map(d => ({
                     id: d.id,
                     name: d.name,
                     contentType: d.contentType,
-                    previewUrl: `http://localhost:8082/documents/${d.id}`
+                    previewUrl: `http://localhost:8084/templates/${d.id}`
                 }));
-                setDocuments(fullDocs);
+                setTemplates(fullDocs);
             })
             .catch(console.error);
     }, []);
@@ -138,7 +138,7 @@ const Profile: React.FC = () => {
         setTemplateFields([]);
         setFieldValues({});
         try {
-            const response = await fetch(`http://localhost:8082/templates/${template.id}/fields`);
+            const response = await fetch(`http://localhost:8084/templates/${template.id}/fields`);
             const fields = await response.json(); // expected format: [{ name: 'clientName', type: 'text' }, ...]
             setTemplateFields(fields);
         } catch (e) {
@@ -207,7 +207,7 @@ const Profile: React.FC = () => {
                 return (
                     <div className="preview-wrapper">
                         {isDoc ? (
-                            <div className="doc-placeholder">DOC/DOCX not previewable</div>
+                            <WordPreview fileUrl={openedTemplate.previewUrl} full={true} />
                         ) : (
                             <iframe src={openedTemplate.previewUrl} title={openedTemplate.name}
                                     className="preview-frame"/>
@@ -303,7 +303,7 @@ const Profile: React.FC = () => {
                     ))}
                     <button onClick={async () => {
                         try {
-                            const res = await fetch(`http://localhost:8082/templates/${openedTemplate.id}/fill`, {
+                            const res = await fetch(`http://localhost:8084/templates/${openedTemplate.id}/fill`, {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify(fieldValues),
