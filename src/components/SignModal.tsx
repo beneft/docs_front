@@ -66,7 +66,7 @@ const SignModal = ({
                                                     headers: { 'Content-Type': 'application/json' },
                                                     body: JSON.stringify({
                                                         documentId: openedDocument.id,
-                                                        signature: signature
+                                                        cms: signature
                                                     })
                                                 });
 
