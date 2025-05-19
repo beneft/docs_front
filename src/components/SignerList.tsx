@@ -1,15 +1,21 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useDrag, useDrop, DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
+import { useAuth } from '../context/AuthContext';
 import "./SignerList.css";
 
-type Signer = {
+export type Signer = {
     id: string;
     name: string;
     iin: string;
     phone: string;
     email: string;
     deputies: Deputy[];
+};
+
+type SignerListProps = {
+    signers: Signer[];
+    setSigners: React.Dispatch<React.SetStateAction<Signer[]>>;
 };
 
 type Deputy = {
@@ -112,10 +118,13 @@ const DraggableSigner: React.FC<DraggableSignerProps> = ({
     );
 };
 
-const SignerList: React.FC = () => {
-    const [signers, setSigners] = useState<Signer[]>([
-        { id: generateId(), name: "Default Signer", iin: "", phone: "", email: "", deputies: [] },
-    ]);
+const SignerList: React.FC<SignerListProps> = ({ signers, setSigners }) => {
+    const { user } = useAuth();
+    useEffect(() => {
+        if (user) {
+            setSigners([{ id: user.id.toString(), name: user.name, iin: "", phone: "", email: "", deputies: [] }]);
+        }
+    }, [user]);
     const [showSignerModal, setShowSignerModal] = useState(false);
     const [showDeputyModal, setShowDeputyModal] = useState(false);
     const [editingSignerId, setEditingSignerId] = useState<string | null>(null);
@@ -216,13 +225,15 @@ const SignerList: React.FC = () => {
 
     const toggleIWillSign = () => {
         if (iWillSign) {
-            setSigners((prev) => prev.filter((s) => s.name !== "Default Signer"));
+            setSigners((prev) => prev.filter((s) => s.id !== user?.id.toString()));
             setIWillSign(false);
         } else {
-            setSigners((prev) => [
-                ...prev,
-                { id: generateId(), name: "Default Signer", iin: "", phone: "", email: "", deputies: [] },
-            ]);
+            if (user) {
+                setSigners((prev) => [
+                    ...prev,
+                    {id: user?.id.toString(), name: user?.name, iin: "", phone: "", email: "", deputies: []},
+                ]);
+            }
             setIWillSign(true);
         }
     };

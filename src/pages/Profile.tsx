@@ -6,6 +6,7 @@ import PaperBasketSection from '../components/PaperBasketSection';
 import type { DocumentItem } from '../components/PaperBasketSection';
 import SignModal from "../components/SignModal";
 import SignerList from "../components/SignerList";
+import type { Signer } from '../components/SignerList';
 import WordPreview from "../components/WordPreview";
 import { useAuth } from '../context/AuthContext';
 
@@ -17,6 +18,7 @@ const Profile: React.FC = () => {
     const [documentType, setDocumentType] = useState<string | null>(null);
     const [documentStep, setDocumentStep] = useState<1 | 2 | null>(null);
     const [documentName, setDocumentName] = useState<string>('');
+    const [signers, setSigners] = useState<Signer[]>([]);
     const [documents, setDocuments] = useState<DocumentItem[]>([]);
     const [openedDocument, setOpenedDocument] = useState<DocumentItem | null>(null);
     const [showSignModal, setShowSignModal] = useState(false);
@@ -96,7 +98,8 @@ const Profile: React.FC = () => {
         if (user != null) {
             formData.append('metadata', JSON.stringify({
                 name: documentName,
-                uploaderId: user.id
+                uploaderId: user.id,
+                signers: signers
             }));
         } else {
             return null;
@@ -161,11 +164,11 @@ const Profile: React.FC = () => {
             return (
                 <div className="document-settings">
                     <h2>Document Settings</h2>
-                    <label><input type="checkbox" /> Confidential</label><br />
-                    <label><input type="checkbox" /> Requires Signature</label><br />
-                    <label><input type="checkbox" /> Send Notification</label><br />
+                    {/*<label><input type="checkbox" /> Confidential</label><br />*/}
+                    {/*<label><input type="checkbox" /> Requires Signature</label><br />*/}
+                    {/*<label><input type="checkbox" /> Send Notification</label><br />*/}
                     {/* Add more options as needed */}
-                    <SignerList></SignerList>
+                    <SignerList signers={signers} setSigners={setSigners} />
                 </div>
             );
         } else if (selected === 'create') {

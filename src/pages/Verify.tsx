@@ -2,12 +2,14 @@ import React, { useState } from 'react';
 import UploadArea from '../components/UploadArea';
 import '../styles/Profile.css';
 import '../styles/Verify.css';
+import WordPreview from "../components/WordPreview";
 
 const Verify: React.FC = () => {
     const [file, setFile] = useState<File | null>(null);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const [docType, setDocType] = useState<string | null>(null);
     const [verifyResult, setVerifyResult] = useState<any[] | null>(null);
+    const [loading, setLoading] = useState(false);
 
     const handleUpload = (file: File, url: string, docType: string) => {
         setFile(file);
@@ -16,6 +18,7 @@ const Verify: React.FC = () => {
     };
 
     const handleVerify = async () => {
+        setLoading(true);
         if (!file) return;
 
         const formData = new FormData();
@@ -32,12 +35,14 @@ const Verify: React.FC = () => {
                 { name: "Alice Johnson", date: "2024-08-01", certificate: "Valid", reason: "Approved" },
                 { name: "Bob Smith", date: "2024-08-02", certificate: "Valid", reason: "Reviewed" }
             ]);
+            setLoading(false);
         } catch (error) {
             alert('Verification failed.');
             setVerifyResult([
                 { name: "Alice Johnson", date: "2024-08-01", certificate: "Valid", reason: "Approved" },
                 { name: "Bob Smith", date: "2024-08-02", certificate: "Valid", reason: "Reviewed" }
             ]);
+            setLoading(false);
         }
     };
 
@@ -62,7 +67,7 @@ const Verify: React.FC = () => {
                         {file && (
                             <div className="verify-button">
                             <p>You have uploaded a document "{file.name}".</p>
-                            <button className="verify-verify" onClick={handleVerify}>Verify</button>
+                            <button className="verify-verify" onClick={handleVerify}>Verify{loading && <span className="spinner" />}</button>
                                 <button className="verify-clear" onClick={handleClear}>Clear</button>
                             </div>
                         )}
@@ -89,9 +94,7 @@ const Verify: React.FC = () => {
                     docType === 'application/pdf' ? (
                         <iframe src={previewUrl} title="Preview" className="preview-frame" />
                     ) : (
-                        <div className="preview-message">
-                            <p>Preview not available for this file type.</p>
-                        </div>
+                        <WordPreview fileUrl={previewUrl} full={true} />
                     )
                 ) : (
                     <UploadArea onUpload={handleUpload} />
