@@ -6,11 +6,15 @@ import "./SignerList.css";
 
 export type Signer = {
     id: string;
+    userId?: number;
     name: string;
-    iin: string;
-    phone: string;
+    position: string;
     email: string;
-    deputies: Deputy[];
+
+    deputy? : Deputy;
+
+    status?: string;
+    order?: number;
 };
 
 type SignerListProps = {
@@ -23,8 +27,6 @@ type SignerListProps = {
 type Deputy = {
     id: string;
     name: string;
-    iin: string;
-    phone: string;
     email: string;
 };
 
@@ -112,8 +114,11 @@ const DraggableSigner: React.FC<DraggableSignerProps> = ({
             <div className="signers-buttons">
                 <button className="signerlist-button" onClick={() => onEdit(signer.id)}>Edit Signer</button>
                 <button className="signerlist-button" onClick={() => onDelete(signer.id)}>Delete Signer</button>
+                {/*<button className="signerlist-button" onClick={() => onOpenDeputy(signer.id)}>*/}
+                {/*    Deputies ({signer.deputies.length})*/}
+                {/*</button>*/}
                 <button className="signerlist-button" onClick={() => onOpenDeputy(signer.id)}>
-                    Deputies ({signer.deputies.length})
+                    Deputy ({signer.deputy ? 1 : 0})
                 </button>
             </div>
         </li>
@@ -124,7 +129,7 @@ const SignerList: React.FC<SignerListProps> = ({ signers, setSigners , sequentia
     const { user } = useAuth();
     useEffect(() => {
         if (user) {
-            setSigners([{ id: user.id.toString(), name: user.name, iin: "", phone: "", email: "", deputies: [] }]);
+            setSigners([{ id: generateId(), userId:user.id, name: user.name, email: "", position: ""}]);
         }
     }, [user]);
     const [showSignerModal, setShowSignerModal] = useState(false);
@@ -134,10 +139,10 @@ const SignerList: React.FC<SignerListProps> = ({ signers, setSigners , sequentia
     const [iWillSign, setIWillSign] = useState(true);
 
     // Form state for signer modal
-    const [form, setForm] = useState({ name: "", iin: "", phone: "", email: "" });
+    const [form, setForm] = useState({ name: "", email: "", position: ""});
 
     // Deputy editing form state
-    const [deputyForm, setDeputyForm] = useState({ id: "", name: "", iin: "", phone: "", email: "" });
+    const [deputyForm, setDeputyForm] = useState({ name: "", email: "" });
     const [isEditingDeputy, setIsEditingDeputy] = useState(false);
 
     // Move signer in list (for drag and drop)
@@ -153,10 +158,10 @@ const SignerList: React.FC<SignerListProps> = ({ signers, setSigners , sequentia
     const openSignerModal = (signerId?: string) => {
         if (signerId) {
             const signer = signers.find((s) => s.id === signerId)!;
-            setForm({ name: signer.name, iin: signer.iin, phone: signer.phone, email: signer.email });
+            setForm({ name: signer.name, email: signer.email , position: signer.position });
             setEditingSignerId(signerId);
         } else {
-            setForm({ name: "", iin: "", phone: "", email: "" });
+            setForm({ name: "", email: "", position: "" });
             setEditingSignerId(null);
         }
         setShowSignerModal(true);
@@ -168,7 +173,7 @@ const SignerList: React.FC<SignerListProps> = ({ signers, setSigners , sequentia
                 prev.map((s) => (s.id === editingSignerId ? { ...s, ...form } : s))
             );
         } else {
-            setSigners((prev) => [...prev, { ...form, id: generateId(), deputies: [] }]);
+            setSigners((prev) => [...prev, { ...form, id: generateId() }]);
         }
         setShowSignerModal(false);
     };
@@ -180,7 +185,7 @@ const SignerList: React.FC<SignerListProps> = ({ signers, setSigners , sequentia
     const openDeputyModal = (signerId: string) => {
         setEditingDeputySignerId(signerId);
         setShowDeputyModal(true);
-        setDeputyForm({ id: "", name: "", iin: "", phone: "", email: "" });
+        setDeputyForm({ name: "", email: "" });
         setIsEditingDeputy(false);
     };
 
@@ -189,50 +194,42 @@ const SignerList: React.FC<SignerListProps> = ({ signers, setSigners , sequentia
         setSigners((prev) =>
             prev.map((s) => {
                 if (s.id !== editingDeputySignerId) return s;
-                if (isEditingDeputy) {
-                    return {
-                        ...s,
-                        deputies: s.deputies.map((d) =>
-                            d.id === deputyForm.id ? { ...deputyForm } : d
-                        ),
-                    };
-                } else {
-                    return {
-                        ...s,
-                        deputies: [...s.deputies, { ...deputyForm, id: generateId() }],
-                    };
-                }
+                return {
+                    ...s,
+                    deputy: { ...deputyForm, id: s.deputy?.id ?? generateId() },
+                };
             })
         );
-        setDeputyForm({ id: "", name: "", iin: "", phone: "", email: "" });
+        setDeputyForm({ name: "", email: "" });
         setIsEditingDeputy(false);
     };
 
-    const deleteDeputy = (deputyId: string) => {
+    const deleteDeputy = () => {
         if (!editingDeputySignerId) return;
         setSigners((prev) =>
             prev.map((s) =>
-                s.id === editingDeputySignerId
-                    ? { ...s, deputies: s.deputies.filter((d) => d.id !== deputyId) }
-                    : s
+                s.id === editingDeputySignerId ? { ...s, deputy: undefined } : s
             )
         );
     };
 
-    const startEditDeputy = (deputy: Deputy) => {
-        setDeputyForm(deputy);
-        setIsEditingDeputy(true);
+    const startEditDeputy = () => {
+        const signer = signers.find((s) => s.id === editingDeputySignerId);
+        if (signer?.deputy) {
+            setDeputyForm(signer.deputy);
+            setIsEditingDeputy(true);
+        }
     };
 
     const toggleIWillSign = () => {
         if (iWillSign) {
-            setSigners((prev) => prev.filter((s) => s.id !== user?.id.toString()));
+            setSigners((prev) => prev.filter((s) => s.userId !== user?.id));
             setIWillSign(false);
         } else {
             if (user) {
                 setSigners((prev) => [
                     ...prev,
-                    {id: user?.id.toString(), name: user?.name, iin: "", phone: "", email: "", deputies: []},
+                    {id: generateId(), userId: user.id, name: user?.name, email: "", position: ""},
                 ]);
             }
             setIWillSign(true);
@@ -250,9 +247,9 @@ const SignerList: React.FC<SignerListProps> = ({ signers, setSigners , sequentia
                     </label>
                     <label>
                         <input className="signerlist-input"
-                            type="checkbox"
-                            checked={sequentialSigning}
-                            onChange={() => setSequentialSigning(!sequentialSigning)}
+                               type="checkbox"
+                               checked={sequentialSigning}
+                               onChange={() => setSequentialSigning(!sequentialSigning)}
                         /> Sequential signing
                     </label>
                 </div>
@@ -280,24 +277,19 @@ const SignerList: React.FC<SignerListProps> = ({ signers, setSigners , sequentia
                         <div className="signerlist-modal-content">
                             <h4>{editingSignerId ? "Edit Signer" : "Add Signer"}</h4>
                             <input className="signerlist-input"
-                                placeholder="Name"
-                                value={form.name}
-                                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                                   placeholder="Name"
+                                   value={form.name}
+                                   onChange={(e) => setForm({ ...form, name: e.target.value })}
                             />
                             <input className="signerlist-input"
-                                placeholder="IIN"
-                                value={form.iin}
-                                onChange={(e) => setForm({ ...form, iin: e.target.value })}
+                                   placeholder="Email"
+                                   value={form.email}
+                                   onChange={(e) => setForm({ ...form, email: e.target.value })}
                             />
                             <input className="signerlist-input"
-                                placeholder="Phone"
-                                value={form.phone}
-                                onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                            />
-                            <input className="signerlist-input"
-                                placeholder="Email"
-                                value={form.email}
-                                onChange={(e) => setForm({ ...form, email: e.target.value })}
+                                   placeholder="Position"
+                                   value={form.position}
+                                   onChange={(e) => setForm({ ...form, position: e.target.value })}
                             />
                             <button className="signerlist-button" onClick={saveSigner}>Save</button>
                             <button className="signerlist-button" onClick={() => setShowSignerModal(false)}>Cancel</button>
@@ -311,45 +303,44 @@ const SignerList: React.FC<SignerListProps> = ({ signers, setSigners , sequentia
                         <div className="signerlist-modal-content">
                             <h4>Deputies for Signer</h4>
                             <ul>
-                                {signers
-                                    .find((s) => s.id === editingDeputySignerId)!
-                                    .deputies.map((d) => (
+                                {(() => {
+                                    const signer = signers.find((s) => s.id === editingDeputySignerId);
+                                    const deputy = signer?.deputy;
+                                    return deputy ? [deputy].map((d) => (
                                         <li key={d.id}>
-                                            {d.name} ({d.iin})
-                                            <button className="signerlist-button" onClick={() => startEditDeputy(d)}>Edit</button>
-                                            <button className="signerlist-button"onClick={() => deleteDeputy(d.id)}>Delete</button>
+                                            {d.name} ({d.email})
+                                            <button className="signerlist-button" onClick={() => startEditDeputy()}>Edit</button>
+                                            <button className="signerlist-button" onClick={() => deleteDeputy()}>Delete</button>
                                         </li>
-                                    ))}
+                                    )) : null;
+                                })()}
+                                    {/* .deputies.map((d) => (*/}
+                                    {/*     <li key={d.id}>*/}
+                                    {/*         {d.name} ({d.iin})*/}
+                                    {/*         <button className="signerlist-button" onClick={() => startEditDeputy(d)}>Edit</button>*/}
+                                    {/*         <button className="signerlist-button"onClick={() => deleteDeputy(d.id)}>Delete</button>*/}
+                                    {/*     </li>*/}
+                                    {/* ))}*/}
                             </ul>
 
                             <h5>{isEditingDeputy ? "Edit Deputy" : "Add Deputy"}</h5>
                             <input className="signerlist-input"
-                                placeholder="Name"
-                                value={deputyForm.name}
-                                onChange={(e) => setDeputyForm({ ...deputyForm, name: e.target.value })}
+                                   placeholder="Name"
+                                   value={deputyForm.name}
+                                   onChange={(e) => setDeputyForm({ ...deputyForm, name: e.target.value })}
                             />
                             <input className="signerlist-input"
-                                placeholder="IIN"
-                                value={deputyForm.iin}
-                                onChange={(e) => setDeputyForm({ ...deputyForm, iin: e.target.value })}
-                            />
-                            <input className="signerlist-input"
-                                placeholder="Phone"
-                                value={deputyForm.phone}
-                                onChange={(e) => setDeputyForm({ ...deputyForm, phone: e.target.value })}
-                            />
-                            <input className="signerlist-input"
-                                placeholder="Email"
-                                value={deputyForm.email}
-                                onChange={(e) => setDeputyForm({ ...deputyForm, email: e.target.value })}
+                                   placeholder="Email"
+                                   value={deputyForm.email}
+                                   onChange={(e) => setDeputyForm({ ...deputyForm, email: e.target.value })}
                             />
                             <button className="signerlist-button" onClick={addOrEditDeputy}>{isEditingDeputy ? "Save" : "Add"}</button>
                             <button className="signerlist-button"
-                                onClick={() => {
-                                    setShowDeputyModal(false);
-                                    setIsEditingDeputy(false);
-                                    setDeputyForm({ id: "", name: "", iin: "", phone: "", email: "" });
-                                }}
+                                    onClick={() => {
+                                        setShowDeputyModal(false);
+                                        setIsEditingDeputy(false);
+                                        setDeputyForm({ name: "", email: "" });
+                                    }}
                             >
                                 Close
                             </button>

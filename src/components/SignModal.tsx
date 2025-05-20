@@ -60,7 +60,6 @@ const SignModal = ({
                                                 const base64 = (reader.result as string).split(',')[1];
                                                 let signature = await signDocumentWithNCALayer(base64);
                                                 console.log("Signature:", signature);
-                                                console.log("dataBase64:", base64);
 
                                                 if (signature != null) {
                                                     signature = signature
