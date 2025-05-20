@@ -16,6 +16,8 @@ export type Signer = {
 type SignerListProps = {
     signers: Signer[];
     setSigners: React.Dispatch<React.SetStateAction<Signer[]>>;
+    sequentialSigning: boolean;
+    setSequentialSigning: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
 type Deputy = {
@@ -27,7 +29,7 @@ type Deputy = {
 };
 
 function generateId() {
-    return Math.random().toString(36).substr(2, 9);
+    return '-'+Math.random().toString(36).substr(2, 9);
 }
 
 const ItemTypes = {
@@ -118,7 +120,7 @@ const DraggableSigner: React.FC<DraggableSignerProps> = ({
     );
 };
 
-const SignerList: React.FC<SignerListProps> = ({ signers, setSigners }) => {
+const SignerList: React.FC<SignerListProps> = ({ signers, setSigners , sequentialSigning, setSequentialSigning} ) => {
     const { user } = useAuth();
     useEffect(() => {
         if (user) {
@@ -129,7 +131,6 @@ const SignerList: React.FC<SignerListProps> = ({ signers, setSigners }) => {
     const [showDeputyModal, setShowDeputyModal] = useState(false);
     const [editingSignerId, setEditingSignerId] = useState<string | null>(null);
     const [editingDeputySignerId, setEditingDeputySignerId] = useState<string | null>(null);
-    const [sequentialSigning, setSequentialSigning] = useState(false);
     const [iWillSign, setIWillSign] = useState(true);
 
     // Form state for signer modal

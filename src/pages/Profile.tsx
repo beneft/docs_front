@@ -19,6 +19,7 @@ const Profile: React.FC = () => {
     const [documentStep, setDocumentStep] = useState<1 | 2 | null>(null);
     const [documentName, setDocumentName] = useState<string>('');
     const [signers, setSigners] = useState<Signer[]>([]);
+    const [sequentialSigning, setSequentialSigning] = useState(false);
     const [documents, setDocuments] = useState<DocumentItem[]>([]);
     const [openedDocument, setOpenedDocument] = useState<DocumentItem | null>(null);
     const [showSignModal, setShowSignModal] = useState(false);
@@ -84,24 +85,64 @@ const Profile: React.FC = () => {
         setDocumentStep(null);
         setDocumentType(null);
         setDocumentName('');
+        setOpenedDocument(null);
+        setOpenedTemplate(null);
+        setSigners([]);
+        setSequentialSigning(false);
     };
 
     const proceedToDrafts = async () => {
         setLoading(true);
         if (!uploadedFile || !documentName) {
             alert('Please upload a file and name it.');
+            setLoading(false);
             return;
         }
 
+        const originalName = uploadedFile.name;
+        const extensionMatch = originalName.match(/\.(docx|pdf)$/i);
+        if (!extensionMatch) {
+            alert('Only .docx and .pdf files are supported.');
+            setLoading(false);
+            return;
+        }
+        const originalExtension = extensionMatch[0].toLowerCase();
+        const baseName = documentName.replace(/\.(docx|pdf)$/i, '');
+
+        let id;
+        try {
+            const idResponse = await fetch('http://localhost:8082/next-id');
+            if (!idResponse.ok) {
+                throw new Error('Failed to fetch document ID');
+            }
+            id = await idResponse.text();
+        } catch (err) {
+            console.error(err);
+            alert('Could not generate document ID');
+            setLoading(false);
+            return;
+        }
+
+        const finalName = `${baseName}-id${id}${originalExtension}`;
+        const finalNameIdless = baseName + originalExtension;
+
+        const renamedFile = new File([uploadedFile], finalName, {
+            type: uploadedFile.type,
+            lastModified: uploadedFile.lastModified
+        });
+
+
         const formData = new FormData();
-        formData.append('file', uploadedFile);
+        formData.append('file', renamedFile);
         if (user != null) {
             formData.append('metadata', JSON.stringify({
-                name: documentName,
+                name: finalNameIdless,
                 uploaderId: user.id,
-                signers: signers
+                //signers: signers,
+                //sequentialSinging: sequentialSigning
             }));
         } else {
+            setLoading(false);
             return null;
         }
 
@@ -168,7 +209,7 @@ const Profile: React.FC = () => {
                     {/*<label><input type="checkbox" /> Requires Signature</label><br />*/}
                     {/*<label><input type="checkbox" /> Send Notification</label><br />*/}
                     {/* Add more options as needed */}
-                    <SignerList signers={signers} setSigners={setSigners} />
+                    <SignerList signers={signers} setSigners={setSigners} sequentialSigning={sequentialSigning} setSequentialSigning={setSequentialSigning} />
                 </div>
             );
         } else if (selected === 'create') {
@@ -314,6 +355,10 @@ const Profile: React.FC = () => {
                             if (!res.ok) throw new Error('Failed to submit');
                             alert('Template successfully filled!');
                             setOpenedTemplate(null);
+                            clearDocument();
+                            fetchDocumentMetadata();
+                            setSelected('Drafts');
+                            setBasketOpen(true);
                         } catch (e) {
                             alert('Error submitting template');
                             console.error(e);
