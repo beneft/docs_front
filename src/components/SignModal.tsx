@@ -58,8 +58,15 @@ const SignModal = ({
                                         reader.onload = async () => {
                                             try {
                                                 const base64 = (reader.result as string).split(',')[1];
-                                                const signature = await signDocumentWithNCALayer(base64);
+                                                let signature = await signDocumentWithNCALayer(base64);
                                                 console.log("Signature:", signature);
+
+                                                if (signature != null) {
+                                                    signature = signature
+                                                        .replace(/-----BEGIN CMS-----/, '')
+                                                        .replace(/-----END CMS-----/, '')
+                                                        .replace(/\s+/g, '');
+                                                }
 
                                                 const response = await fetch('http://localhost:8083/signatures', {
                                                     method: 'POST',
