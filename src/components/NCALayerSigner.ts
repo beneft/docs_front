@@ -14,7 +14,7 @@ export async function signDocumentWithNCALayer(documentBase64: string): Promise<
         const signature = await client.basicsSignCMS(
             NCALayerClient.basicsStorageAll,
             documentBase64,
-            NCALayerClient.basicsCMSParamsDetached,
+            NCALayerClient.basicsCMSParamsAttached,
             NCALayerClient.basicsSignerSignAny
         );
 

@@ -60,27 +60,28 @@ const SignModal = ({
                                                 const base64 = (reader.result as string).split(',')[1];
                                                 let signature = await signDocumentWithNCALayer(base64);
                                                 console.log("Signature:", signature);
+                                                console.log("dataBase64:", base64);
 
                                                 if (signature != null) {
                                                     signature = signature
                                                         .replace(/-----BEGIN CMS-----/, '')
                                                         .replace(/-----END CMS-----/, '')
                                                         .replace(/\s+/g, '');
-                                                }
 
-                                                const response = await fetch('http://localhost:8083/signatures', {
-                                                    method: 'POST',
-                                                    headers: { 'Content-Type': 'application/json' },
-                                                    body: JSON.stringify({
-                                                        documentId: openedDocument.id,
-                                                        cms: signature
-                                                    })
-                                                });
+                                                    const response = await fetch('http://localhost:8083/signatures', {
+                                                        method: 'POST',
+                                                        headers: {'Content-Type': 'application/json'},
+                                                        body: JSON.stringify({
+                                                            documentId: openedDocument.id,
+                                                            cms: signature
+                                                        })
+                                                    });
 
-                                                if (!response.ok) {
-                                                    throw new Error(`Failed to post signature: HTTP ${response.status}`);
+                                                    if (!response.ok) {
+                                                        throw new Error(`Failed to post signature: HTTP ${response.status}`);
+                                                    }
+                                                    onClose();
                                                 }
-                                                onClose();
                                             } catch (err) {
                                                 console.error("Signing or posting failed:", err);
                                             } finally {

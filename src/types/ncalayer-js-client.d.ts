@@ -7,6 +7,7 @@ declare module 'ncalayer-js-client' {
 
         static basicsStorageAll: string;
         static basicsCMSParamsDetached: string;
+        static basicsCMSParamsAttached: string;
         static basicsSignerSignAny: string;
 
         connect(): Promise<void>;
