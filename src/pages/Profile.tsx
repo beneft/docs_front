@@ -111,7 +111,7 @@ const Profile: React.FC = () => {
 
         let id;
         try {
-            const idResponse = await fetch('http://localhost:8082/next-id');
+            const idResponse = await fetch('http://localhost:8082/documents/next-id');
             if (!idResponse.ok) {
                 throw new Error('Failed to fetch document ID');
             }
