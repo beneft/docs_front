@@ -124,7 +124,6 @@ const Profile: React.FC = () => {
         }
 
         const finalName = `${baseName}-id${id}${originalExtension}`;
-        const finalNameIdless = baseName + originalExtension;
 
         const renamedFile = new File([uploadedFile], finalName, {
             type: uploadedFile.type,
@@ -136,7 +135,7 @@ const Profile: React.FC = () => {
         formData.append('file', renamedFile);
         if (user != null) {
             formData.append('metadata', JSON.stringify({
-                name: finalNameIdless,
+                name: finalName,
                 uploaderId: user.id,
                 //signers: signers,
                 //sequentialSinging: sequentialSigning
