@@ -7,7 +7,7 @@ import "./SignerList.css";
 export type Signer = {
     id: string;
     userId?: number;
-    name: string;
+    fullName: string;
     position: string;
     email: string;
 
@@ -107,7 +107,7 @@ const DraggableSigner: React.FC<DraggableSignerProps> = ({
             style={{ opacity: isDragging ? 0.5 : 1, cursor: isDragDisabled ? "default" : "move" }}
         >
             <div className="signers-header">
-                <span className="signers-name">{signer.name}</span>
+                <span className="signers-name">{signer.fullName}</span>
                 {!isDragDisabled && <span className="drag-handle" title="Drag to reorder">⠿</span>}
             </div>
 
@@ -129,7 +129,7 @@ const SignerList: React.FC<SignerListProps> = ({ signers, setSigners , sequentia
     const { user } = useAuth();
     useEffect(() => {
         if (user) {
-            setSigners([{ id: generateId(), userId:user.id, name: user.name, email: "", position: ""}]);
+            setSigners([{ id: generateId(), userId:user.id, fullName: user.name, email: "", position: ""}]);
         }
     }, [user]);
     const [showSignerModal, setShowSignerModal] = useState(false);
@@ -139,50 +139,71 @@ const SignerList: React.FC<SignerListProps> = ({ signers, setSigners , sequentia
     const [iWillSign, setIWillSign] = useState(true);
 
     // Form state for signer modal
-    const [form, setForm] = useState({ name: "", email: "", position: ""});
+    const [form, setForm] = useState({ fullName: "", email: "", position: ""});
 
     // Deputy editing form state
     const [deputyForm, setDeputyForm] = useState({ name: "", email: "" });
     const [isEditingDeputy, setIsEditingDeputy] = useState(false);
 
+    useEffect(() => {
+        setSigners((prev) => assignOrderIfSequential(prev, sequentialSigning));
+    }, [sequentialSigning]);
+    const assignOrderIfSequential = (signers: Signer[], sequential: boolean): Signer[] => {
+        return sequential
+            ? signers.map((s, i) => ({ ...s, order: i }))
+            : signers.map(s => {
+                const { order, ...rest } = s;
+                return rest; // remove order if not sequential
+            });
+    };
     // Move signer in list (for drag and drop)
     const moveSigner = (dragIndex: number, hoverIndex: number) => {
         setSigners((prevSigners) => {
             const newSigners = [...prevSigners];
             const [removed] = newSigners.splice(dragIndex, 1);
             newSigners.splice(hoverIndex, 0, removed);
-            return newSigners;
+            return assignOrderIfSequential(newSigners, sequentialSigning);
         });
     };
 
     const openSignerModal = (signerId?: string) => {
         if (signerId) {
             const signer = signers.find((s) => s.id === signerId)!;
-            setForm({ name: signer.name, email: signer.email , position: signer.position });
+            setForm({ fullName: signer.fullName, email: signer.email , position: signer.position });
             setEditingSignerId(signerId);
         } else {
-            setForm({ name: "", email: "", position: "" });
+            setForm({ fullName: "", email: "", position: "" });
             setEditingSignerId(null);
         }
         setShowSignerModal(true);
     };
 
     const saveSigner = () => {
-        if (editingSignerId) {
-            setSigners((prev) =>
-                prev.map((s) => (s.id === editingSignerId ? { ...s, ...form } : s))
-            );
-        } else {
-            setSigners((prev) => [...prev, { ...form, id: generateId() }]);
-        }
+        setSigners((prev) => {
+            let updated;
+            if (editingSignerId) {
+                updated = prev.map((s) =>
+                    s.id === editingSignerId ? { ...s, ...form } : s
+                );
+            } else {
+                updated = [...prev, { ...form, id: generateId() }];
+            }
+            return assignOrderIfSequential(updated, sequentialSigning);
+        });
         setShowSignerModal(false);
     };
 
     const deleteSigner = (id: string) => {
-        setSigners((prev) => prev.filter((s) => s.id !== id));
+        setSigners((prev) =>
+            assignOrderIfSequential(
+                prev.filter((s) => s.id !== id),
+                sequentialSigning
+            )
+        );
     };
 
     const openDeputyModal = (signerId: string) => {
+        console.log(signers);
         setEditingDeputySignerId(signerId);
         setShowDeputyModal(true);
         setDeputyForm({ name: "", email: "" });
@@ -223,14 +244,27 @@ const SignerList: React.FC<SignerListProps> = ({ signers, setSigners , sequentia
 
     const toggleIWillSign = () => {
         if (iWillSign) {
-            setSigners((prev) => prev.filter((s) => s.userId !== user?.id));
+            setSigners((prev) =>
+                assignOrderIfSequential(
+                    prev.filter((s) => s.userId !== user?.id),
+                    sequentialSigning
+                )
+            );
             setIWillSign(false);
         } else {
             if (user) {
-                setSigners((prev) => [
-                    ...prev,
-                    {id: generateId(), userId: user.id, name: user?.name, email: "", position: ""},
-                ]);
+                setSigners((prev) =>
+                    assignOrderIfSequential(
+                        [...prev, {
+                            id: generateId(),
+                            userId: user.id,
+                            fullName: user.name,
+                            email: "",
+                            position: ""
+                        }],
+                        sequentialSigning
+                    )
+                );
             }
             setIWillSign(true);
         }
@@ -278,8 +312,8 @@ const SignerList: React.FC<SignerListProps> = ({ signers, setSigners , sequentia
                             <h4>{editingSignerId ? "Edit Signer" : "Add Signer"}</h4>
                             <input className="signerlist-input"
                                    placeholder="Name"
-                                   value={form.name}
-                                   onChange={(e) => setForm({ ...form, name: e.target.value })}
+                                   value={form.fullName}
+                                   onChange={(e) => setForm({ ...form, fullName: e.target.value })}
                             />
                             <input className="signerlist-input"
                                    placeholder="Email"

@@ -10,6 +10,15 @@ import type { Signer } from '../components/SignerList';
 import WordPreview from "../components/WordPreview";
 import { useAuth } from '../context/AuthContext';
 
+interface SignerDTO {
+    userId: number;
+    fullName: string;
+    email: string;
+    position: string;
+    status: 'PENDING' | 'SIGNED' | 'DECLINED';
+    canSignNow: boolean;
+}
+
 const Profile: React.FC = () => {
     const [selected, setSelected] = useState<string | null>(null);
     const [basketOpen, setBasketOpen] = useState(false);
@@ -30,6 +39,7 @@ const Profile: React.FC = () => {
     const [fieldValues, setFieldValues] = useState<{ [key: string]: string }>({});
     const { user , login } = useAuth();
     const navigate = useNavigate();
+    const [signersFromServer, setSignersFromServer] = useState<SignerDTO[]>([]);
 
     useEffect(() => {
         fetch('http://localhost:8084/templates/metadata')
@@ -65,6 +75,23 @@ const Profile: React.FC = () => {
             .catch(console.error);
     };
 
+    useEffect(() => {
+        if (openedDocument) {
+            fetch(`http://localhost:8083/approval/${openedDocument.id}/signers`)
+                .then(res => res.json())
+                .then(data => {
+                    setSignersFromServer(Array.isArray(data) ? data : []);
+                    console.log(data);
+                })
+                .catch(err => {
+                    console.error("Failed to fetch signers", err);
+                    setSignersFromServer([]);
+                });
+        } else {
+            setSignersFromServer([]);
+        }
+    }, [openedDocument]);
+
     const dummyDocs: DocumentItem[] = [
         { id: '1', name: 'Contracthhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh Draft', contentType:"application/pdf", previewUrl: 'https://example.com/doc1' },
         { id: '2', name: 'Invoice 2024', contentType:"application/pdf",previewUrl: 'https://example.com/doc2' },
@@ -89,6 +116,7 @@ const Profile: React.FC = () => {
         setOpenedTemplate(null);
         setSigners([]);
         setSequentialSigning(false);
+        setSignersFromServer([]);
     };
 
     const proceedToDrafts = async () => {
@@ -153,6 +181,31 @@ const Profile: React.FC = () => {
 
             if (!response.ok) {
                 throw new Error(`Upload failed: ${response.statusText}`);
+            }
+
+            const uploadResult = await response.json();
+            const documentId = uploadResult.documentId;
+            const signingPayload = {
+                documentId,
+                approvalType: sequentialSigning ? "SEQUENTIAL" : "PARALLEL",
+                signers: signers,
+                currentSignerIndex: 0
+            };
+            try {
+                const startResponse = await fetch("http://localhost:8083/approval/start", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(signingPayload)
+                });
+
+                if (!startResponse.ok) {
+                    throw new Error("Failed to start signing process");
+                }
+
+                alert("Signing process started successfully!");
+            } catch (err) {
+                console.error(err);
+                alert("Failed to initiate signing process");
             }
 
             alert('Document uploaded successfully!');
@@ -297,33 +350,40 @@ const Profile: React.FC = () => {
         } else if (openedDocument) {
             return (
                 <div className="right-controls">
-                    <button className="back-button" onClick={() => setOpenedDocument(null)}>← Back to list</button>
+                    <button className="back-button" onClick={() => clearDocument()}>← Back to list</button>
                     <h2 className='signHeader'>{openedDocument.name}</h2>
                     <h3>Signees</h3>
                     <ul className="signer-list">
-                        {/* Placeholder signees list */}
-                        {[
-                            { name: 'Alice Johnson', status: 'Signed', you: false },
-                            { name: 'Bob Smith', status: 'Pending', you: false },
-                            { name: 'You', status: 'Pending', you: true }
-                        ].map((signee, index) => (
-                            <li key={index} className="signer-item">
-                                <div className="signer-main">
-                                    <div className="signer-left">
-                                        <strong className="signer-name">{signee.name}</strong>
-                                        {!signee.you && (
-                                            <div className="signer-actions">
-                                                <button>Edit Deputy</button>
-                                                <button>Contact</button>
+                        {(signersFromServer ?? []).map((signee, index) => {
+                            const isYou = user?.id === signee.userId;
+                            const statusIcon = signee.status === "SIGNED" ? "✔️"
+                                : signee.status === "DECLINED" ? "❌"
+                                    : "⏳";
+                            return (
+                                <li key={index} className="signer-item">
+                                    <div className="signer-main">
+                                        <div className="signer-left">
+                                            <strong className="signer-name">
+                                                {isYou ? "You" : signee.fullName}
+                                            </strong>
+                                            <div className="signer-info">
+                                                <span className="signer-email">{signee.email}</span> |{" "}
+                                                <span className="signer-position">{signee.position}</span>
                                             </div>
-                                        )}
+                                            {!isYou && (
+                                                <div className="signer-actions">
+                                                    <button>Edit Deputy</button>
+                                                    <button>Contact</button>
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className={`signer-status ${signee.status.toLowerCase()}`}>
+                                            {statusIcon} {signee.status}
+                                        </div>
                                     </div>
-                                    <div className={`signer-status ${signee.status.toLowerCase()}`}>
-                                        {signee.status === 'Signed' ? '✔️' : '⏳'} {signee.status}
-                                    </div>
-                                </div>
-                            </li>
-                        ))}
+                                </li>
+                            );
+                        })}
                     </ul>
                 </div>
             );
