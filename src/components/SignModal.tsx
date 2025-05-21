@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import './SignModal.css';
 import { signDocumentWithNCALayer } from './NCALayerSigner';
 import { DocumentItem } from './PaperBasketSection';
+import {useAuth} from "../context/AuthContext";
 
 const SignModal = ({
                        onClose,
@@ -12,6 +13,7 @@ const SignModal = ({
 }) => {
     const [tab, setTab] = useState<'eds' | 'qr'>('eds');
     const [loading, setLoading] = useState(false);
+    const { user } = useAuth();
     const openedDocumentBlob = useRef<Blob | null>(null);
 
     useEffect(() => {
@@ -67,11 +69,22 @@ const SignModal = ({
                                                         .replace(/-----END CMS-----/, '')
                                                         .replace(/\s+/g, '');
 
-                                                    const response = await fetch('http://localhost:8083/signatures', {
+                                                    // const response = await fetch('http://localhost:8083/signatures', {
+                                                    //     method: 'POST',
+                                                    //     headers: {'Content-Type': 'application/json'},
+                                                    //     body: JSON.stringify({
+                                                    //         documentId: openedDocument.id,
+                                                    //         cms: signature
+                                                    //     })
+                                                    // });
+
+                                                    const response = await fetch('http://localhost:8083/approval/sign', {
                                                         method: 'POST',
                                                         headers: {'Content-Type': 'application/json'},
                                                         body: JSON.stringify({
                                                             documentId: openedDocument.id,
+                                                            authorId: user?.id,
+                                                            authorName: user?.name,
                                                             cms: signature
                                                         })
                                                     });
@@ -82,6 +95,7 @@ const SignModal = ({
                                                     onClose();
                                                 }
                                             } catch (err) {
+                                                alert("Signing or posting failed.");
                                                 console.error("Signing or posting failed:", err);
                                             } finally {
                                                 setLoading(false);
