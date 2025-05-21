@@ -3,13 +3,16 @@ import './SignModal.css';
 import { signDocumentWithNCALayer } from './NCALayerSigner';
 import { DocumentItem } from './PaperBasketSection';
 import {useAuth} from "../context/AuthContext";
+import {SignerDTO} from "../pages/Profile";
 
 const SignModal = ({
                        onClose,
                        openedDocument,
+                        guest
                    }: {
     onClose: () => void;
     openedDocument: DocumentItem;
+    guest: string | null;
 }) => {
     const [tab, setTab] = useState<'eds' | 'qr'>('eds');
     const [loading, setLoading] = useState(false);
@@ -44,10 +47,8 @@ const SignModal = ({
                     {tab === 'eds' ? (
                         <div className="eds-tab">
                             <div className="eds-description">
-                            <p><strong>Name:</strong> John Doe</p>
-                            <p><strong>Position:</strong> Manager</p>
-                            <p><strong>INN:</strong> 123456789012</p>
-                            <p><strong>Organization:</strong> Example Inc.</p></div>
+                            <p><strong>Instructions:</strong> This is test environment for document flow system, so i am expecting, that you are familiar with NCALayer and how it functions.</p>
+                            </div>
                             <button
                                 className="open-nca-btn"
                                 onClick={async () => {
@@ -83,8 +84,8 @@ const SignModal = ({
                                                         headers: {'Content-Type': 'application/json'},
                                                         body: JSON.stringify({
                                                             documentId: openedDocument.id,
-                                                            authorId: user?.id,
-                                                            authorName: user?.name,
+                                                            authorId: guest ? "-1" : user?.id,
+                                                            authorName: guest || (user?.firstName+" "+user?.lastName),
                                                             cms: signature
                                                         })
                                                     });

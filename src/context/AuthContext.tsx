@@ -1,13 +1,25 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
 type User = {
-    id: number;
-    name: string;
+    id: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+    organization: string;
+    position: string;
+    phone: string;
 };
+
+type AuthResponse = {
+    accessToken: string,
+    refreshToken: string,
+    expiresIn: number,
+    tokenType: string
+}
 
 type AuthContextType = {
     user: User | null;
-    login: (user: User) => void;
+    login: (auth: AuthResponse) => Promise<void>;
     logout: () => void;
 };
 
@@ -19,9 +31,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return stored ? JSON.parse(stored) : null;
     });
 
-    const login = (userData: User) => {
-        setUser(userData);
-        localStorage.setItem("user", JSON.stringify(userData));
+    const login = async (auth: AuthResponse) => {
+
+        localStorage.setItem("accessToken", auth.accessToken);
+
+        const res = await fetch("http://localhost:8081/api/profile", {
+            method: 'GET',
+            headers: {
+                "Authorization": `Bearer ${auth.accessToken}`
+            }
+        });
+
+        if (!res.ok) throw new Error("Failed to fetch user profile");
+
+        const user: User = await res.json();
+
+        setUser(user);
+        localStorage.setItem("user", JSON.stringify(user));
     };
 
     const logout = () => {

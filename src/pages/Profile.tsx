@@ -10,8 +10,8 @@ import type { Signer } from '../components/SignerList';
 import WordPreview from "../components/WordPreview";
 import { useAuth } from '../context/AuthContext';
 
-interface SignerDTO {
-    userId: number;
+export interface SignerDTO {
+    userId: string;
     fullName: string;
     email: string;
     position: string;
@@ -41,6 +41,12 @@ const Profile: React.FC = () => {
     const navigate = useNavigate();
     const [signersFromServer, setSignersFromServer] = useState<SignerDTO[]>([]);
 
+    useEffect(()=>{
+        if (!user){
+            navigate("/login");
+        }
+    }, []);
+
     useEffect(() => {
         fetch('http://localhost:8084/templates/metadata')
             .then(res => res.json())
@@ -61,7 +67,7 @@ const Profile: React.FC = () => {
     }, []);
 
     const fetchDocumentMetadata = () => {
-        fetch('http://localhost:8082/documents/metadata')
+        fetch('http://localhost:8082/documents/metadata?uploaderId='+user?.id)
             .then(res => res.json())
             .then((data: { id: string; name: string; contentType: string }[]) => {
                 const fullDocs = data.map(d => ({
@@ -164,9 +170,7 @@ const Profile: React.FC = () => {
         if (user != null) {
             formData.append('metadata', JSON.stringify({
                 name: finalName,
-                uploaderId: user.id,
-                //signers: signers,
-                //sequentialSinging: sequentialSigning
+                uploaderId: user.id
             }));
         } else {
             setLoading(false);
@@ -187,10 +191,12 @@ const Profile: React.FC = () => {
             const documentId = uploadResult.documentId;
             const signingPayload = {
                 documentId,
+                initiator: user?.id,
                 approvalType: sequentialSigning ? "SEQUENTIAL" : "PARALLEL",
                 signers: signers,
                 currentSignerIndex: 0
             };
+            console.log(signingPayload);
             try {
                 const startResponse = await fetch("http://localhost:8083/approval/start", {
                     method: "POST",
@@ -283,11 +289,12 @@ const Profile: React.FC = () => {
                         <SignModal
                             onClose={() => setShowSignModal(false)}
                             openedDocument={openedDocument}
+                            guest = {null}
                         />
                     )}
                 </div>
             );
-        } else if (['Sent', 'Received', 'Closed', 'Drafts', 'Archive', 'Deleted'].includes(selected || '')) {
+        } else if (['Sent', 'Drafts'].includes(selected || '')) {
             return (
                 <PaperBasketSection
                     title={selected!}
@@ -356,11 +363,18 @@ const Profile: React.FC = () => {
                     <ul className="signer-list">
                         {(signersFromServer ?? []).map((signee, index) => {
                             const isYou = user?.id === signee.userId;
+                            const waitingTurn = signee.status === "PENDING" && !signee.canSignNow;
                             const statusIcon = signee.status === "SIGNED" ? "✔️"
                                 : signee.status === "DECLINED" ? "❌"
-                                    : "⏳";
+                                    : waitingTurn ? "🕓"
+                                        : "⏳";
+
+                            const statusText = signee.status === "SIGNED" ? "Signed"
+                                : signee.status === "DECLINED" ? "Declined"
+                                    : waitingTurn ? "Waiting"
+                                        : "Pending";
                             return (
-                                <li key={index} className="signer-item">
+                                <li key={index} className={`signer-item ${waitingTurn ? "signer-disabled" : ""}`}>
                                     <div className="signer-main">
                                         <div className="signer-left">
                                             <strong className="signer-name">
@@ -378,7 +392,7 @@ const Profile: React.FC = () => {
                                             )}
                                         </div>
                                         <div className={`signer-status ${signee.status.toLowerCase()}`}>
-                                            {statusIcon} {signee.status}
+                                            {statusIcon} {statusText}
                                         </div>
                                     </div>
                                 </li>
@@ -437,7 +451,7 @@ const Profile: React.FC = () => {
             <div className="profile-nav">
                 <div className="nav-logo">DocFlow</div>
                 <a className="back-button" href="/">← Back</a>
-                {user && <div className="nav-logo">{user.name}</div>}
+                {user && <div className="nav-logo">{user.firstName} {user.lastName}</div>}
                 {documentStep ? (
                     <div className="step-header">
                         <p>📄 Document Creation</p>

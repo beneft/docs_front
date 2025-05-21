@@ -17,7 +17,7 @@ const Navbar: React.FC = () => {
             <div className="nav-actions">
                 {user ? (
                     <>
-                        <span className="logo">{user.name}</span>
+                        <span className="logo">{user.firstName} {user.lastName}</span>
                         <Link to="/profile" className="register">Profile</Link>
                         <button onClick={logout} className="login">Logout</button>
                     </>

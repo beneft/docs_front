@@ -6,7 +6,7 @@ import "./SignerList.css";
 
 export type Signer = {
     id: string;
-    userId?: number;
+    userId?: string;
     fullName: string;
     position: string;
     email: string;
@@ -129,7 +129,7 @@ const SignerList: React.FC<SignerListProps> = ({ signers, setSigners , sequentia
     const { user } = useAuth();
     useEffect(() => {
         if (user) {
-            setSigners([{ id: generateId(), userId:user.id, fullName: user.name, email: "", position: ""}]);
+            setSigners([{ id: generateId(), userId:user.id, fullName: user.firstName+" "+user.lastName, email: "", position: ""}]);
         }
     }, [user]);
     const [showSignerModal, setShowSignerModal] = useState(false);
@@ -258,7 +258,7 @@ const SignerList: React.FC<SignerListProps> = ({ signers, setSigners , sequentia
                         [...prev, {
                             id: generateId(),
                             userId: user.id,
-                            fullName: user.name,
+                            fullName: user.firstName+" "+user.lastName,
                             email: "",
                             position: ""
                         }],
