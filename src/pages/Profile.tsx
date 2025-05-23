@@ -9,6 +9,7 @@ import SignerList from "../components/SignerList";
 import type { Signer } from '../components/SignerList';
 import WordPreview from "../components/WordPreview";
 import { useAuth } from '../context/AuthContext';
+import UserProfilePanel from '../components/UserInfo';
 
 export interface SignerDTO {
     userId: string;
@@ -26,18 +27,23 @@ const Profile: React.FC = () => {
     const [documentUrl, setDocumentUrl] = useState<string | null>(null);
     const [documentType, setDocumentType] = useState<string | null>(null);
     const [documentStep, setDocumentStep] = useState<1 | 2 | null>(null);
+    const [uploadView, setUploadView] = useState(false);
     const [documentName, setDocumentName] = useState<string>('');
     const [signers, setSigners] = useState<Signer[]>([]);
     const [sequentialSigning, setSequentialSigning] = useState(false);
     const [documents, setDocuments] = useState<DocumentItem[]>([]);
+    const [readyDocuments, setReadyDocuments] = useState<DocumentItem[]>([]);
+    const [receivedDocuments, setReceivedDocuments] = useState<DocumentItem[]>([]);
+    const [drafts, setDrafts] = useState<DocumentItem[]>([]);
     const [openedDocument, setOpenedDocument] = useState<DocumentItem | null>(null);
+    const [editedDocument, setEditedDocument] = useState<DocumentItem | null>(null);
     const [showSignModal, setShowSignModal] = useState(false);
     const [loading, setLoading] = useState(false);
     const [templates, setTemplates] = useState<DocumentItem[]>([]);
     const [openedTemplate, setOpenedTemplate] = useState<DocumentItem | null>(null);
     const [templateFields, setTemplateFields] = useState<{ name: string; type: string; }[]>([]);
     const [fieldValues, setFieldValues] = useState<{ [key: string]: string }>({});
-    const { user , login } = useAuth();
+    const { user , login, getAccessToken} = useAuth();
     const navigate = useNavigate();
     const [signersFromServer, setSignersFromServer] = useState<SignerDTO[]>([]);
 
@@ -62,23 +68,77 @@ const Profile: React.FC = () => {
             .catch(console.error);
     }, []);
 
+
     useEffect(() => {
         fetchDocumentMetadata();
     }, []);
 
-    const fetchDocumentMetadata = () => {
-        fetch('http://localhost:8082/documents/metadata?uploaderId='+user?.id)
-            .then(res => res.json())
-            .then((data: { id: string; name: string; contentType: string }[]) => {
-                const fullDocs = data.map(d => ({
-                    id: d.id,
-                    name: d.name,
-                    contentType: d.contentType,
-                    previewUrl: `http://localhost:8082/documents/${d.id}`
-                }));
-                setDocuments(fullDocs);
-            })
-            .catch(console.error);
+    const fetchDocumentMetadata = async () => {
+        const token = getAccessToken();
+        if (!token || !user?.id) {
+            console.warn("No access token or user—cannot fetch documents");
+            return;
+        }
+
+        try {
+            const uploadedRes = await fetch(
+                `http://localhost:8082/documents/metadata?uploaderId=${user.id}`,
+                {
+                    headers: { Authorization: `Bearer ${token}` },
+                }
+            );
+            if (!uploadedRes.ok) throw new Error("Failed to fetch uploaded documents");
+            const uploadedData: { id: string; name: string; contentType: string; type: string }[] = await uploadedRes.json();
+
+            const uploadedDocs = uploadedData.map((d) => ({
+                id: d.id,
+                name: d.name,
+                contentType: d.contentType,
+                previewUrl: `http://localhost:8082/documents/${d.id}`,
+                type: d.type,
+            }));
+
+            const ready = uploadedDocs.filter(doc => doc.type === "READY");
+            const drafts = uploadedDocs.filter(doc => doc.type === "DRAFT");
+            const others = uploadedDocs.filter(doc => doc.type !== "READY" && doc.type !== "DRAFT");
+
+            setDrafts(drafts);
+            setReadyDocuments(ready);
+            setDocuments(others);
+
+            const receivedIdsRes = await fetch(
+                `http://localhost:8082/users/${user.id}/documents`,
+                {
+                    headers: { Authorization: `Bearer ${token}` },
+                }
+            );
+            if (!receivedIdsRes.ok) throw new Error("Failed to fetch received document IDs");
+
+            const receivedDocIds: string[] = await receivedIdsRes.json();
+
+            const receivedPromises = receivedDocIds.map(id =>
+                fetch(`http://localhost:8082/documents/metadata?documentId=${id}`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                }).then(res => res.ok ? res.json() : null)
+            );
+
+            const receivedResults = await Promise.all(receivedPromises);
+            const flattenedResults = receivedResults
+                .filter(Boolean)
+                .flat();
+            const receivedDocs = flattenedResults.map((d: any) => ({
+                id: d.id,
+                name: d.name,
+                contentType: d.contentType,
+                previewUrl: `http://localhost:8082/documents/${d.id}`,
+                type: d.type
+            }));
+
+
+            setReceivedDocuments(receivedDocs);
+        } catch (err) {
+            console.error("Error fetching document metadata:", err);
+        }
     };
 
     useEffect(() => {
@@ -98,18 +158,14 @@ const Profile: React.FC = () => {
         }
     }, [openedDocument]);
 
-    const dummyDocs: DocumentItem[] = [
-        { id: '1', name: 'Contracthhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh Draft', contentType:"application/pdf", previewUrl: 'https://example.com/doc1' },
-        { id: '2', name: 'Invoice 2024', contentType:"application/pdf",previewUrl: 'https://example.com/doc2' },
-        { id: '3', name: 'Proposal XYZ', contentType:"application/pdf",previewUrl: 'https://example.com/doc3' },
-    ];
 
     const handleDocumentUpload = (file: File, url: string, docType: string) => {
         setUploadedFile(file);
         setDocumentUrl(url);
         setDocumentName(file.name);
         setDocumentType(docType);
-        setDocumentStep(1);
+        //setDocumentStep(1);
+        setUploadView(true);
     };
 
     const clearDocument = () => {
@@ -119,6 +175,7 @@ const Profile: React.FC = () => {
         setDocumentType(null);
         setDocumentName('');
         setOpenedDocument(null);
+        setUploadView(false);
         setOpenedTemplate(null);
         setSigners([]);
         setSequentialSigning(false);
@@ -127,6 +184,7 @@ const Profile: React.FC = () => {
 
     const proceedToDrafts = async () => {
         setLoading(true);
+        const token = getAccessToken();
         if (!uploadedFile || !documentName) {
             alert('Please upload a file and name it.');
             setLoading(false);
@@ -170,7 +228,8 @@ const Profile: React.FC = () => {
         if (user != null) {
             formData.append('metadata', JSON.stringify({
                 name: finalName,
-                uploaderId: user.id
+                type: "DRAFT"
+                //uploaderId: user.id
             }));
         } else {
             setLoading(false);
@@ -180,6 +239,9 @@ const Profile: React.FC = () => {
         try {
             const response = await fetch('http://localhost:8082/documents', {
                 method: 'POST',
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                },
                 body: formData
             });
 
@@ -187,32 +249,33 @@ const Profile: React.FC = () => {
                 throw new Error(`Upload failed: ${response.statusText}`);
             }
 
-            const uploadResult = await response.json();
-            const documentId = uploadResult.documentId;
-            const signingPayload = {
-                documentId,
-                initiator: user?.id,
-                approvalType: sequentialSigning ? "SEQUENTIAL" : "PARALLEL",
-                signers: signers,
-                currentSignerIndex: 0
-            };
-            console.log(signingPayload);
-            try {
-                const startResponse = await fetch("http://localhost:8083/approval/start", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(signingPayload)
-                });
-
-                if (!startResponse.ok) {
-                    throw new Error("Failed to start signing process");
-                }
-
-                alert("Signing process started successfully!");
-            } catch (err) {
-                console.error(err);
-                alert("Failed to initiate signing process");
-            }
+            // const uploadResult = await response.json();
+            // const documentId = uploadResult.documentId;
+            // const signingPayload = {
+            //     documentId,
+            //     initiator: user?.id,
+            //     approvalType: sequentialSigning ? "SEQUENTIAL" : "PARALLEL",
+            //     signers: signers,
+            //     currentSignerIndex: 0
+            // };
+            // console.log(signingPayload);
+            // try {
+            //     const startResponse = await fetch("http://localhost:8083/approval/start", {
+            //         method: "POST",
+            //         headers: { "Content-Type": "application/json",
+            //             "Authorization": `Bearer ${token}`},
+            //         body: JSON.stringify(signingPayload)
+            //     });
+            //
+            //     if (!startResponse.ok) {
+            //         throw new Error("Failed to start signing process");
+            //     }
+            //
+            //     alert("Signing process started successfully!");
+            // } catch (err) {
+            //     console.error(err);
+            //     alert("Failed to initiate signing process");
+            // }
 
             alert('Document uploaded successfully!');
             clearDocument();
@@ -226,6 +289,50 @@ const Profile: React.FC = () => {
             setLoading(false);
         }
     };
+
+    const startApprovalProcess = async () => {
+        if (!editedDocument) return;
+        const documentId = editedDocument.id;
+        const token = getAccessToken();
+        const signingPayload = {
+            documentId,
+            initiator: user?.id,
+            approvalType: sequentialSigning ? "SEQUENTIAL" : "PARALLEL",
+            signers: signers,
+            currentSignerIndex: 0
+        };
+
+        try {
+            const response = await fetch("http://localhost:8083/approval/start", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify(signingPayload)
+            });
+
+            if (!response.ok) throw new Error("Failed to start signing process");
+
+            alert("Signing process started successfully!");
+            clearDocument();
+            fetchDocumentMetadata();
+            setSelected('Sent');
+            setBasketOpen(true);
+        } catch (err) {
+            console.error(err);
+            alert("Failed to initiate signing process");
+        }
+    };
+
+    const handleEditSequence = (doc: DocumentItem) => {
+        setDocumentStep(1);
+        setDocumentUrl(doc.previewUrl);
+        setDocumentType(doc.contentType);
+        setDocumentName(doc.name);
+        setEditedDocument(doc);
+        setSelected(null);
+    }
 
     const handleSectionSelect = (section: string) => {
         setSelected(section);
@@ -249,6 +356,17 @@ const Profile: React.FC = () => {
     };
 
     const renderContent = () => {
+        if (uploadView && documentUrl){
+            if (documentType === 'application/pdf') {
+                return (
+                    <iframe src={documentUrl} className="preview-frame" title="Document Preview" />
+                );
+            } else {
+                return (
+                    <WordPreview fileUrl={documentUrl} full={true} />
+                );
+            }
+        } else
         if (documentStep === 1 && documentUrl) {
             if (documentType === 'application/pdf') {
                 return (
@@ -270,6 +388,8 @@ const Profile: React.FC = () => {
                     <SignerList signers={signers} setSigners={setSigners} sequentialSigning={sequentialSigning} setSequentialSigning={setSequentialSigning} />
                 </div>
             );
+        } else if (selected === 'info'){
+            return <UserProfilePanel user={user!}></UserProfilePanel>;
         } else if (selected === 'create') {
             return <UploadArea onUpload={handleDocumentUpload} />;
         } else if (selected === 'verify') {
@@ -284,22 +404,53 @@ const Profile: React.FC = () => {
                     ) : (
                         <iframe src={openedDocument.previewUrl} title={openedDocument.name} className="preview-frame" />
                     )}
-                    <button className="floating-sign-btn" onClick={() => setShowSignModal(true)}>Sign</button>
-                    {showSignModal && openedDocument && (
-                        <SignModal
-                            onClose={() => setShowSignModal(false)}
-                            openedDocument={openedDocument}
-                            guest = {null}
-                        />
+                    {(signersFromServer ?? []).some(signer =>
+                        signer.userId === user?.id &&
+                        signer.canSignNow &&
+                        signer.status !== "SIGNED"
+                    ) && (
+                        <>
+                            <button className="floating-sign-btn" onClick={() => setShowSignModal(true)}>Sign</button>
+                            {showSignModal && openedDocument && (
+                                <SignModal
+                                    onClose={() => setShowSignModal(false)}
+                                    openedDocument={openedDocument}
+                                    guest={null}
+                                />
+                            )}
+                        </>
                     )}
                 </div>
             );
-        } else if (['Sent', 'Drafts'].includes(selected || '')) {
+        } else if (['Sent'].includes(selected || '')) {
             return (
                 <PaperBasketSection
                     title={selected!}
-                    //items={dummyDocs}
                     items={documents}
+                    onItemClick={(doc) => setOpenedDocument(doc)}
+                />
+            );
+        } else if (['Drafts'].includes(selected || '')) {
+            return (
+                <PaperBasketSection
+                    title={selected!}
+                    items={drafts}
+                    onItemClick={(doc) => handleEditSequence(doc)}
+                />
+            );
+        } else if (['Closed'].includes(selected || '')) {
+            return (
+                <PaperBasketSection
+                    title={selected!}
+                    items={readyDocuments}
+                    onItemClick={(doc) => setOpenedDocument(doc)}
+                />
+            );
+        } else if (['Received'].includes(selected || '')) {
+            return (
+                <PaperBasketSection
+                    title={selected!}
+                    items={receivedDocuments}
                     onItemClick={(doc) => setOpenedDocument(doc)}
                 />
             );
@@ -333,7 +484,7 @@ const Profile: React.FC = () => {
     };
 
     const renderRightPanel = () => {
-        if (documentStep === 1 && documentUrl) {
+        if (uploadView && documentUrl){
             return (
                 <div className="right-controls">
                     <button onClick={clearDocument}>Clear</button>
@@ -343,6 +494,21 @@ const Profile: React.FC = () => {
                         value={documentName}
                         onChange={(e) => setDocumentName(e.target.value)}
                     />
+                    <button onClick={() => proceedToDrafts()}>Proceed</button>
+                </div>
+            );
+        }
+        if (documentStep === 1 && documentUrl) {
+            return (
+                <div className="right-controls">
+                    <button onClick={clearDocument}>Clear</button>
+                    <input
+                        type="text"
+                        placeholder="Name your document"
+                        value={documentName}
+                        onChange={(e) => setDocumentName(e.target.value)}
+                        disabled={true}
+                    />
                     <button onClick={() => setDocumentStep(2)}>Proceed</button>
                 </div>
             );
@@ -351,7 +517,8 @@ const Profile: React.FC = () => {
                 <div className="right-controls">
                     <button onClick={() => setDocumentStep(1)}>Back to step 1</button>
                     <p><br></br>Almost done. Click below to finish and save to Drafts.</p>
-                    <button onClick={proceedToDrafts}>Finish{loading && <span className="spinner" />}</button>
+                    {/*<button onClick={saveEditedSigners}>Save & Exit</button>*/}
+                    <button onClick={startApprovalProcess}>Finish{loading && <span className="spinner" />}</button>
                 </div>
             );
         } else if (openedDocument) {
@@ -420,7 +587,7 @@ const Profile: React.FC = () => {
                     ))}
                     <button onClick={async () => {
                         try {
-                            const res = await fetch(`http://localhost:8084/templates/${openedTemplate.id}/fill`, {
+                            const res = await fetch(`http://localhost:8084/templates/${openedTemplate.id}/fill?uploaderId=`+user?.id, {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify(fieldValues),
@@ -429,7 +596,7 @@ const Profile: React.FC = () => {
                             alert('Template successfully filled!');
                             setOpenedTemplate(null);
                             clearDocument();
-                            fetchDocumentMetadata();
+                            await fetchDocumentMetadata();
                             setSelected('Drafts');
                             setBasketOpen(true);
                         } catch (e) {

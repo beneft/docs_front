@@ -10,6 +10,7 @@ const Navbar: React.FC = () => {
         <nav className="navbar">
             <div className="logo">DocFlow</div>
             <ul className="nav-links">
+                <li><Link to="/verify">Verify signed document</Link></li>
                 <li><Link to="/news">News</Link></li>
                 <li><Link to="/pricing">Pricing</Link></li>
                 <li><Link to="/about">About Us</Link></li>

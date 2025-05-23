@@ -14,6 +14,8 @@ const SignPage: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [signersFromServer, setSignersFromServer] = useState<SignerDTO[]>([]);
     const [currentSigner, setCurrentSigner] = useState<SignerDTO | null>(null);
+    const [originalDeputyData, setOriginalDeputyData] = useState< string | null>(null);
+    const [actingAsDeputy, setActingAsDeputy] = useState(false);
 
     useEffect(() => {
         if (!id) return;
@@ -55,8 +57,25 @@ const SignPage: React.FC = () => {
                 setSignersFromServer(signers);
                 try {
                     const decodedEmail = atob(decodeURIComponent(mail!));
-                    const found = signers.find(s => s.email.toLowerCase() === decodedEmail.toLowerCase());
-                    setCurrentSigner(found || null);
+                    let found = signers.find(s => s.email.toLowerCase() === decodedEmail.toLowerCase());
+
+                    if (found) {
+                        setCurrentSigner(found);
+                        setOriginalDeputyData(null);
+                        setActingAsDeputy(false);
+                    } else {
+                        const signerWithDeputy = signers.find(s => s.deputy?.email?.toLowerCase() === decodedEmail.toLowerCase());
+                        if (signerWithDeputy) {
+                            setCurrentSigner(signerWithDeputy);
+                            setOriginalDeputyData(signerWithDeputy.deputy.email ?? null);
+                            setActingAsDeputy(true);
+                        } else {
+                            setCurrentSigner(null);
+                            setOriginalDeputyData(null);
+                            setActingAsDeputy(false);
+                            setOpenedDocument(null);
+                        }
+                    }
                 } catch (err) {
                     console.error("Failed to decode or match signer", err);
                     setCurrentSigner(null);
@@ -84,13 +103,21 @@ const SignPage: React.FC = () => {
                 ) : (
                     <iframe src={openedDocument.previewUrl} title={openedDocument.name} className="preview-frame" />
                 )}
-                <button className="floating-sign-btn" onClick={() => setShowSignModal(true)}>Sign</button>
-                {showSignModal && (
-                    <SignModal
-                        onClose={() => setShowSignModal(false)}
-                        openedDocument={openedDocument}
-                        guest = {currentSigner!.email}
-                    />
+                {(signersFromServer ?? []).some(signer =>
+                    signer.email === currentSigner!.email &&
+                    signer.canSignNow &&
+                    signer.status !== "SIGNED"
+                ) && (
+                    <>
+                        <button className="floating-sign-btn" onClick={() => setShowSignModal(true)}>Sign</button>
+                        {showSignModal && openedDocument && (
+                            <SignModal
+                                onClose={() => setShowSignModal(false)}
+                                openedDocument={openedDocument}
+                                guest={currentSigner!.email}
+                            />
+                        )}
+                    </>
                 )}
             </div>
         );
@@ -98,6 +125,7 @@ const SignPage: React.FC = () => {
 
     const renderRightPanel = () => {
         if (!openedDocument) return null;
+        if (currentSigner==null) return null;
         return (
             <div className="right-controls">
                 <h2 className='signHeader'>{openedDocument.name}</h2>
@@ -120,7 +148,11 @@ const SignPage: React.FC = () => {
                                 <div className="signer-main">
                                     <div className="signer-left">
                                         <strong className="signer-name">
-                                            {isYou ? "You" : signee.fullName}
+                                            {isYou ? (
+                                                actingAsDeputy && originalDeputyData
+                                                    ? `Deputy of ${signee.fullName} (${originalDeputyData})`
+                                                    : "You"
+                                            ) : signee.fullName}
                                         </strong>
                                         <div className="signer-info">
                                             <span className="signer-email">{signee.email}</span> |{" "}

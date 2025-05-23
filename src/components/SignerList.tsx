@@ -6,12 +6,12 @@ import "./SignerList.css";
 
 export type Signer = {
     id: string;
-    userId?: string;
+    userId?: string | null;
     fullName: string;
     position: string;
     email: string;
 
-    deputy? : Deputy;
+    deputy? : Deputy | null;
 
     status?: string;
     order?: number;
@@ -129,7 +129,7 @@ const SignerList: React.FC<SignerListProps> = ({ signers, setSigners , sequentia
     const { user } = useAuth();
     useEffect(() => {
         if (user) {
-            setSigners([{ id: generateId(), userId:user.id, fullName: user.firstName+" "+user.lastName, email: "", position: ""}]);
+            setSigners([{ id: generateId(), userId:user.id, fullName: user.firstName+" "+user.lastName, email: user.email, position: user.position || ""}]);
         }
     }, [user]);
     const [showSignerModal, setShowSignerModal] = useState(false);
@@ -137,6 +137,8 @@ const SignerList: React.FC<SignerListProps> = ({ signers, setSigners , sequentia
     const [editingSignerId, setEditingSignerId] = useState<string | null>(null);
     const [editingDeputySignerId, setEditingDeputySignerId] = useState<string | null>(null);
     const [iWillSign, setIWillSign] = useState(true);
+    const [findMessage, setFindMessage] = useState<string | null>(null);
+    const [foundUserId, setFoundUserId] = useState<string | null>(null);
 
     // Form state for signer modal
     const [form, setForm] = useState({ fullName: "", email: "", position: ""});
@@ -167,6 +169,8 @@ const SignerList: React.FC<SignerListProps> = ({ signers, setSigners , sequentia
     };
 
     const openSignerModal = (signerId?: string) => {
+        setFoundUserId(null);
+        setFindMessage(null);
         if (signerId) {
             const signer = signers.find((s) => s.id === signerId)!;
             setForm({ fullName: signer.fullName, email: signer.email , position: signer.position });
@@ -178,6 +182,23 @@ const SignerList: React.FC<SignerListProps> = ({ signers, setSigners , sequentia
         setShowSignerModal(true);
     };
 
+    const findUserByEmail = async () => {
+        try {
+            const response = await fetch(`http://localhost:8081/api/profile/by-email?email=${encodeURIComponent(form.email)}&exact=true`);
+            if (!response.ok) throw new Error("User not found");
+            const data = await response.json();
+            setForm({
+                fullName: data.firstName + " " + data.lastName,
+                email: data.email,
+                position: data.position || ""
+            });
+            setFoundUserId(data.id);
+            setFindMessage("✅ User found and fields filled.");
+        } catch (error) {
+            setFindMessage("❌ User not found.");
+        }
+    };
+
     const saveSigner = () => {
         setSigners((prev) => {
             let updated;
@@ -186,7 +207,7 @@ const SignerList: React.FC<SignerListProps> = ({ signers, setSigners , sequentia
                     s.id === editingSignerId ? { ...s, ...form } : s
                 );
             } else {
-                updated = [...prev, { ...form, id: generateId() }];
+                updated = [...prev, { ...form, userId:foundUserId, id: generateId() }];
             }
             return assignOrderIfSequential(updated, sequentialSigning);
         });
@@ -229,7 +250,7 @@ const SignerList: React.FC<SignerListProps> = ({ signers, setSigners , sequentia
         if (!editingDeputySignerId) return;
         setSigners((prev) =>
             prev.map((s) =>
-                s.id === editingDeputySignerId ? { ...s, deputy: undefined } : s
+                s.id === editingDeputySignerId ? { ...s, deputy: null } : s
             )
         );
     };
@@ -259,8 +280,8 @@ const SignerList: React.FC<SignerListProps> = ({ signers, setSigners , sequentia
                             id: generateId(),
                             userId: user.id,
                             fullName: user.firstName+" "+user.lastName,
-                            email: "",
-                            position: ""
+                            email: user.email,
+                            position: user.position || ""
                         }],
                         sequentialSigning
                     )
@@ -320,11 +341,15 @@ const SignerList: React.FC<SignerListProps> = ({ signers, setSigners , sequentia
                                    value={form.email}
                                    onChange={(e) => setForm({ ...form, email: e.target.value })}
                             />
+                            <button onClick={findUserByEmail}>Find by Email</button>
                             <input className="signerlist-input"
                                    placeholder="Position"
                                    value={form.position}
                                    onChange={(e) => setForm({ ...form, position: e.target.value })}
                             />
+
+                            {findMessage && <p>{findMessage}</p>}
+
                             <button className="signerlist-button" onClick={saveSigner}>Save</button>
                             <button className="signerlist-button" onClick={() => setShowSignerModal(false)}>Cancel</button>
                         </div>
