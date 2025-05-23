@@ -45,6 +45,15 @@ const SignPage: React.FC = () => {
     };
 
     useEffect(() => {
+        fetchSigners();
+    }, [openedDocument, mail]);
+
+    const handleSigning = () => {
+        fetchSigners();
+        setShowSignModal(false);
+    }
+
+    const fetchSigners = () => {
         if (!openedDocument) {
             setSignersFromServer([]);
             setCurrentSigner(null);
@@ -86,8 +95,7 @@ const SignPage: React.FC = () => {
                 setSignersFromServer([]);
                 setCurrentSigner(null);
             });
-    }, [openedDocument, mail]);
-
+    }
 
     const renderContent = () => {
         if (loading) return <div className="loading">Loading document...</div>;
@@ -112,7 +120,7 @@ const SignPage: React.FC = () => {
                         <button className="floating-sign-btn" onClick={() => setShowSignModal(true)}>Sign</button>
                         {showSignModal && openedDocument && (
                             <SignModal
-                                onClose={() => setShowSignModal(false)}
+                                onClose={() => handleSigning()}
                                 openedDocument={openedDocument}
                                 guest={currentSigner!.email}
                             />

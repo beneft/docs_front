@@ -142,6 +142,10 @@ const Profile: React.FC = () => {
     };
 
     useEffect(() => {
+        fetchSigners();
+    }, [openedDocument]);
+
+    const fetchSigners = async () => {
         if (openedDocument) {
             fetch(`http://localhost:8083/approval/${openedDocument.id}/signers`)
                 .then(res => res.json())
@@ -156,8 +160,12 @@ const Profile: React.FC = () => {
         } else {
             setSignersFromServer([]);
         }
-    }, [openedDocument]);
+    }
 
+    const handleSigning = () => {
+        fetchSigners();
+        setShowSignModal(false);
+    }
 
     const handleDocumentUpload = (file: File, url: string, docType: string) => {
         setUploadedFile(file);
@@ -413,7 +421,7 @@ const Profile: React.FC = () => {
                             <button className="floating-sign-btn" onClick={() => setShowSignModal(true)}>Sign</button>
                             {showSignModal && openedDocument && (
                                 <SignModal
-                                    onClose={() => setShowSignModal(false)}
+                                    onClose={() => handleSigning()}
                                     openedDocument={openedDocument}
                                     guest={null}
                                 />
