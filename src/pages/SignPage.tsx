@@ -122,7 +122,7 @@ const SignPage: React.FC = () => {
                             <SignModal
                                 onClose={() => handleSigning()}
                                 openedDocument={openedDocument}
-                                guest={currentSigner!.email}
+                                guest={originalDeputyData!}
                             />
                         )}
                     </>
