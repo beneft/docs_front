@@ -101,6 +101,18 @@
     z-index: 999;
     cursor: pointer;
 }
+.floating-download-btn {
+    position: absolute;
+    top: 1em;
+    right: 1em;
+    background-color: var(--color-crimson);
+    color: white;
+    border: none;
+    padding: 0.6em 1em;
+    border-radius: 4px;
+    z-index: 999;
+    cursor: pointer;
+}
 .preview-wrapper {
     position: relative;
     height: 100%;

@@ -405,6 +405,15 @@ const Profile: React.FC = () => {
         } else if (openedDocument) {
             const isDocFile = openedDocument.contentType === 'application/msword' ||
                 openedDocument.contentType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+
+            const allSigned = (signersFromServer ?? []).every(signer => signer.status === "SIGNED");
+
+            const currentCanSign = (signersFromServer ?? []).some(signer =>
+                signer.userId === user?.id &&
+                signer.canSignNow &&
+                signer.status !== "SIGNED"
+            );
+
             return (
                 <div className="preview-wrapper">
                     {isDocFile ? (
@@ -412,11 +421,9 @@ const Profile: React.FC = () => {
                     ) : (
                         <iframe src={openedDocument.previewUrl} title={openedDocument.name} className="preview-frame" />
                     )}
-                    {(signersFromServer ?? []).some(signer =>
-                        signer.userId === user?.id &&
-                        signer.canSignNow &&
-                        signer.status !== "SIGNED"
-                    ) && (
+
+                    {/* Sign button shown only if current user can sign */}
+                    {currentCanSign && (
                         <>
                             <button className="floating-sign-btn" onClick={() => setShowSignModal(true)}>Sign</button>
                             {showSignModal && openedDocument && (
@@ -427,6 +434,16 @@ const Profile: React.FC = () => {
                                 />
                             )}
                         </>
+                    )}
+
+                    {allSigned && (
+                        <a
+                            href={`http://localhost:8082/documents/${openedDocument.id}`}
+                            className="floating-download-btn"
+                            download
+                        >
+                            Download
+                        </a>
                     )}
                 </div>
             );

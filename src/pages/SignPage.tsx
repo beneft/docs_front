@@ -104,6 +104,14 @@ const SignPage: React.FC = () => {
         const isDocFile = openedDocument.contentType === 'application/msword' ||
             openedDocument.contentType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
 
+        const allSigned = (signersFromServer ?? []).every(signer => signer.status === "SIGNED");
+
+        const currentCanSign = (signersFromServer ?? []).some(signer =>
+            signer.email === currentSigner?.email &&
+            signer.canSignNow &&
+            signer.status !== "SIGNED"
+        );
+
         return (
             <div className="preview-wrapper">
                 {isDocFile ? (
@@ -111,11 +119,8 @@ const SignPage: React.FC = () => {
                 ) : (
                     <iframe src={openedDocument.previewUrl} title={openedDocument.name} className="preview-frame" />
                 )}
-                {(signersFromServer ?? []).some(signer =>
-                    signer.email === currentSigner!.email &&
-                    signer.canSignNow &&
-                    signer.status !== "SIGNED"
-                ) && (
+
+                {currentCanSign && (
                     <>
                         <button className="floating-sign-btn" onClick={() => setShowSignModal(true)}>Sign</button>
                         {showSignModal && openedDocument && (
@@ -126,6 +131,16 @@ const SignPage: React.FC = () => {
                             />
                         )}
                     </>
+                )}
+
+                {allSigned && (
+                    <a
+                        href={`http://localhost:8082/documents/${openedDocument.id}`}
+                        className="floating-download-btn"
+                        download
+                    >
+                        Download
+                    </a>
                 )}
             </div>
         );
