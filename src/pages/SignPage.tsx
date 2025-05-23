@@ -104,7 +104,9 @@ const SignPage: React.FC = () => {
         const isDocFile = openedDocument.contentType === 'application/msword' ||
             openedDocument.contentType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
 
-        const allSigned = (signersFromServer ?? []).every(signer => signer.status === "SIGNED");
+        const allSigned = Array.isArray(signersFromServer) &&
+            signersFromServer.length > 0 &&
+            signersFromServer.every(signer => signer.status === "SIGNED");
 
         const currentCanSign = (signersFromServer ?? []).some(signer =>
             signer.email === currentSigner?.email &&

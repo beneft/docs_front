@@ -13,15 +13,16 @@ const Home: React.FC = () => {
     const { user , login } = useAuth();
 
     return (
-        <>
-            <Navbar />
-            {user && <AgendaPanel />}
-            <Hero />
-            <Features />
-            {!user && <CTA />}
-            {/* Add promotional sections here later */}
+        <div className="homepage-wrapper">
+            <div className="home-content">
+                <Navbar />
+                {user && <AgendaPanel />}
+                <Hero />
+                <Features />
+                {!user && <CTA />}
+            </div>
             <Footer />
-        </>
+        </div>
     );
 };
 

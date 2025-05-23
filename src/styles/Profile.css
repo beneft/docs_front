@@ -148,6 +148,7 @@
     width: 20vw;
     background-color: var(--color-ivory);
     border-left: 1px solid #ddd;
+    overflow-y: auto;
 }
 
 .right-controls {
