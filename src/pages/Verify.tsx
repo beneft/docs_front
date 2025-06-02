@@ -41,12 +41,23 @@ const Verify: React.FC = () => {
         const formData = new FormData();
         formData.append('file', file);
 
+        const match = file.name.match(/-id([a-fA-F0-9]+)\./); // matches: -id<hexId>.
+        const documentId = match?.[1];
+
+        if (!documentId) {
+            alert("Document ID not found in file name.");
+            setLoading(false);
+            return;
+        }
+
+        formData.append('id', documentId);
+
         try {
-            const response = await fetch('http://localhost:8083/verify', {
+            const response = await fetch('http://localhost:8083/signatures/verify', {
                 method: 'POST',
                 body: formData
             });
-
+            
             if (!response.ok) throw new Error('Verification failed');
 
             const result = await response.json(); // CmsDetailsDTO

@@ -236,7 +236,8 @@ const Profile: React.FC = () => {
         if (user != null) {
             formData.append('metadata', JSON.stringify({
                 name: finalName,
-                type: "DRAFT"
+                type: "DRAFT",
+                id: id
                 //uploaderId: user.id
             }));
         } else {
