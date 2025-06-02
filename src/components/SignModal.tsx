@@ -85,7 +85,7 @@ const SignModal = ({
                                                         body: JSON.stringify({
                                                             documentId: openedDocument.id,
                                                             authorId: guest ? "-1" : user?.id,
-                                                            authorName: guest || (user?.firstName+" "+user?.lastName),
+                                                            authorName: guest ? guest : (user?.firstName+" "+user?.lastName),
                                                             cms: signature
                                                         })
                                                     });

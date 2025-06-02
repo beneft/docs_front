@@ -46,7 +46,29 @@ const Profile: React.FC = () => {
     const { user , login, getAccessToken} = useAuth();
     const navigate = useNavigate();
     const [signersFromServer, setSignersFromServer] = useState<SignerDTO[]>([]);
+    // TODO: УБРАТЬ ВЫВОД BASE64
+    useEffect(() => {
+        const fetchAndEncodeDocument = async () => {
+            if (openedDocument?.previewUrl) {
+                try {
+                    const response = await fetch(openedDocument.previewUrl);
+                    const blob = await response.blob();
+                    const reader = new FileReader();
 
+                    reader.onloadend = () => {
+                        const base64data = reader.result;
+                        console.log("Base64-encoded document:", base64data);
+                    };
+
+                    reader.readAsDataURL(blob);
+                } catch (error) {
+                    console.error("Failed to fetch and encode document:", error);
+                }
+            }
+        };
+
+        fetchAndEncodeDocument();
+    }, [openedDocument]);
     useEffect(()=>{
         if (!user){
             navigate("/login");

@@ -20,12 +20,42 @@ interface CmsDetailsDTO {
     createdDate: string;
 }
 
+interface V2SignatureVerification {
+    authorId: string;
+    authorName: string;
+    verificationResponse: V2VerificationResponse | null;
+}
+
+interface V2VerificationResponse {
+    valid: boolean;
+    signers: {
+        certificates: {
+            valid: boolean;
+            notBefore: string;
+            notAfter: string;
+            subject: {
+                commonName: string;
+                surName: string;
+                iin: string;
+                country: string;
+                dn: string;
+                organization?: string;
+            };
+        }[];
+        tsp?: {
+            genTime: string;
+        };
+    }[];
+}
+
 const Verify: React.FC = () => {
     const [file, setFile] = useState<File | null>(null);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const [docType, setDocType] = useState<string | null>(null);
     const [verifyResult, setVerifyResult] = useState<CmsDetailsDTO | null>(null);
     const [loading, setLoading] = useState(false);
+    const [verifyResultV2, setVerifyResultV2] = useState<V2SignatureVerification[] | null>(null);
+    const [verificationUsedFallback, setVerificationUsedFallback] = useState(false);
 
     const handleUpload = (file: File, url: string, docType: string) => {
         setFile(file);
@@ -36,12 +66,16 @@ const Verify: React.FC = () => {
 
     const handleVerify = async () => {
         setLoading(true);
+        setVerificationUsedFallback(false);
+        setVerifyResult(null);
+        setVerifyResultV2(null);
+
         if (!file) return;
 
         const formData = new FormData();
         formData.append('file', file);
 
-        const match = file.name.match(/-id([a-fA-F0-9]+)\./); // matches: -id<hexId>.
+        const match = file.name.match(/-id([a-fA-F0-9]+)\./);
         const documentId = match?.[1];
 
         if (!documentId) {
@@ -53,18 +87,36 @@ const Verify: React.FC = () => {
         formData.append('id', documentId);
 
         try {
-            const response = await fetch('http://localhost:8083/signatures/verify', {
+            const res = await fetch('http://localhost:8083/signatures/verify/v2', {
                 method: 'POST',
                 body: formData
             });
-            
-            if (!response.ok) throw new Error('Verification failed');
 
-            const result = await response.json(); // CmsDetailsDTO
-            setVerifyResult(result);
+            if (!res.ok) throw new Error('V2 failed');
+
+            const result = await res.json();
+            if (!Array.isArray(result) || result.length === 0) {
+                alert('No signatures found.');
+                setVerifyResultV2([]);
+                return;
+            }
+
+            setVerifyResultV2(result);
         } catch (error) {
-            alert('Verification failed.');
-            setVerifyResult(null);
+            try {
+                const fallback = await fetch('http://localhost:8083/signatures/verify', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!fallback.ok) throw new Error('Fallback also failed');
+
+                const fallbackResult = await fallback.json();
+                setVerificationUsedFallback(true);
+                setVerifyResult(fallbackResult);
+            } catch (fallbackError) {
+                alert('Both V2 and fallback verification failed.');
+            }
         } finally {
             setLoading(false);
         }
@@ -74,6 +126,8 @@ const Verify: React.FC = () => {
         setFile(null);
         setPreviewUrl(null);
         setVerifyResult(null);
+        setVerificationUsedFallback(false);
+        setVerifyResultV2(null);
         setDocType(null);
     };
 
@@ -82,7 +136,38 @@ const Verify: React.FC = () => {
             <div className="profile-nav profile-nav-verify">
                 <div className="nav-logo">DocFlow</div>
                 <a className="back-button" href="/">← Back</a>
-                {verifyResult && verifyResult.signatures ? (
+                {verifyResultV2 ? (
+                    <>
+                        <h2>Verification Results (V2)</h2>
+                        {verifyResultV2.length === 0 ? (
+                            <p className="verify-no-signatures">No signatures found.</p>
+                        ) : (
+                            <ul className="verify-signer-list">
+                                {verifyResultV2.map((sig, index) => {
+                                    const response = sig.verificationResponse;
+                                    const signerEntry = response?.signers?.[0];
+                                    const cert = signerEntry?.certificates?.[0];
+                                    const tspTime = signerEntry?.tsp?.genTime;
+
+                                    const valid = cert?.valid ?? false;
+                                    const subject = cert?.subject;
+
+                                    return (
+                                        <li key={index} className={`verify-signer-item ${valid ? "verified" : "verify-invalid"}`}>
+                                            <strong>{sig.authorName} | {subject?.commonName} | IIN: {subject?.iin}</strong><br />
+                                            Organization: {subject?.organization ?? "N/A"}<br />
+                                            Signed: {tspTime ? new Date(tspTime).toLocaleString() : "Unknown"}<br />
+                                            Valid From: {cert?.notBefore ? new Date(cert.notBefore).toLocaleDateString() : "?"}<br />
+                                            Valid To: {cert?.notAfter ? new Date(cert.notAfter).toLocaleDateString() : "?"}<br />
+                                            Certificate: {valid ? "Valid" : "Invalid"}
+                                        </li>
+                                    );
+                                })}
+                            </ul>
+                        )}
+                        <button onClick={handleClear} className="verify-clear">Clear</button>
+                    </>
+                ) : verifyResult && verifyResult.signatures ? (
                         <>
                             <h2>Verification Results</h2>
                             <ul className="verify-signer-list">

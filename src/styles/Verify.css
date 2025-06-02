@@ -9,6 +9,11 @@
     color: var(--color-navy)
 }
 
+.verify-signer-item.verify-invalid {
+    background-color: #ffcccc;
+    border-left: 4px solid red;
+}
+
 .verify-signer-list {
     list-style: none;
     padding: 0;
