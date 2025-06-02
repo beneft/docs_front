@@ -180,6 +180,10 @@
     background-color: #a02535;
 }
 
+.signHeader{
+    word-break: break-all;
+}
+
 .signer-list {
     list-style: none;
     padding: 0;

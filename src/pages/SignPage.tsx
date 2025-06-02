@@ -137,7 +137,7 @@ const SignPage: React.FC = () => {
 
                 {allSigned && (
                     <a
-                        href={`http://localhost:8082/documents/${openedDocument.id}`}
+                        href={`http://localhost:8082/documents/${openedDocument.id}?download=true`}
                         className="floating-download-btn"
                         download
                     >
