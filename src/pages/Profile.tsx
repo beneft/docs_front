@@ -47,28 +47,27 @@ const Profile: React.FC = () => {
     const navigate = useNavigate();
     const [signersFromServer, setSignersFromServer] = useState<SignerDTO[]>([]);
     // TODO: УБРАТЬ ВЫВОД BASE64
-    useEffect(() => {
-        const fetchAndEncodeDocument = async () => {
-            if (openedDocument?.previewUrl) {
-                try {
-                    const response = await fetch(openedDocument.previewUrl);
-                    const blob = await response.blob();
-                    const reader = new FileReader();
-
-                    reader.onloadend = () => {
-                        const base64data = reader.result;
-                        console.log("Base64-encoded document:", base64data);
-                    };
-
-                    reader.readAsDataURL(blob);
-                } catch (error) {
-                    console.error("Failed to fetch and encode document:", error);
-                }
-            }
-        };
-
-        fetchAndEncodeDocument();
-    }, [openedDocument]);
+    // useEffect(() => {
+    //     const fetchAndEncodeDocument = async () => {
+    //         if (openedDocument?.previewUrl) {
+    //             try {
+    //                 const response = await fetch(openedDocument.previewUrl);
+    //                 const blob = await response.blob();
+    //                 const reader = new FileReader();
+    //
+    //                 reader.onloadend = () => {
+    //                     const base64data = reader.result;
+    //                     console.log("Base64-encoded document:", base64data);
+    //                 };
+    //
+    //                 reader.readAsDataURL(blob);
+    //             } catch (error) {
+    //                 console.error("Failed to fetch and encode document:", error);
+    //             }
+    //         }
+    //     };
+    //     fetchAndEncodeDocument();
+    // }, [openedDocument]);
     useEffect(()=>{
         if (!user){
             navigate("/login");
@@ -446,7 +445,7 @@ const Profile: React.FC = () => {
                     ) : (
                         <iframe src={openedDocument.previewUrl} title={openedDocument.name} className="preview-frame" />
                     )}
-
+                    <div className="floating-btn-group">
                     {/* Sign button shown only if current user can sign */}
                     {currentCanSign && (
                         <>
@@ -461,7 +460,8 @@ const Profile: React.FC = () => {
                         </>
                     )}
 
-                    {allSigned && (
+                    {/*{allSigned && (*/}
+                        {(
                         <a
                             href={`http://localhost:8082/documents/${openedDocument.id}?download=true`}
                             className="floating-download-btn"
@@ -470,6 +470,7 @@ const Profile: React.FC = () => {
                             Download
                         </a>
                     )}
+                    </div>
                 </div>
             );
         } else if (['Sent'].includes(selected || '')) {

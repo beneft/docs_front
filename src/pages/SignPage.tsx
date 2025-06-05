@@ -122,6 +122,7 @@ const SignPage: React.FC = () => {
                     <iframe src={openedDocument.previewUrl} title={openedDocument.name} className="preview-frame" />
                 )}
 
+                <div className="floating-btn-group">
                 {currentCanSign && (
                     <>
                         <button className="floating-sign-btn" onClick={() => setShowSignModal(true)}>Sign</button>
@@ -135,7 +136,8 @@ const SignPage: React.FC = () => {
                     </>
                 )}
 
-                {allSigned && (
+                {/*{allSigned && (*/}
+                    {(
                     <a
                         href={`http://localhost:8082/documents/${openedDocument.id}?download=true`}
                         className="floating-download-btn"
@@ -144,6 +146,7 @@ const SignPage: React.FC = () => {
                         Download
                     </a>
                 )}
+                </div>
             </div>
         );
     };

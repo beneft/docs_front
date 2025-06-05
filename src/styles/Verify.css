@@ -51,3 +51,16 @@
 .verify-button button:hover {
     background-color: var(--color-crimson, #8a1f2d) !important;
 }
+
+.verify-warning {
+    padding: 0.5rem 1rem;
+    margin-bottom: 1rem;
+    background-color: #fff3cd;
+    border-left: 4px solid #ffecb5;
+    border-radius: 0.375rem;
+    color:black;
+}
+
+.verify-warning li {
+    padding-left: 1rem;
+}

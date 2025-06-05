@@ -3,6 +3,7 @@ import UploadArea from '../components/UploadArea';
 import '../styles/Profile.css';
 import '../styles/Verify.css';
 import WordPreview from "../components/WordPreview";
+import { SignerDTO } from "./Profile";
 
 interface SignatureDTO {
     documentId: string;
@@ -56,6 +57,18 @@ const Verify: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [verifyResultV2, setVerifyResultV2] = useState<V2SignatureVerification[] | null>(null);
     const [verificationUsedFallback, setVerificationUsedFallback] = useState(false);
+    const [signersFromServer, setSignersFromServer] = useState<SignerDTO[]>([]);
+
+    const fetchSigners = async (documentId: string) => {
+        try {
+            const res = await fetch(`http://localhost:8083/approval/${documentId}/signers`);
+            const data = await res.json();
+            setSignersFromServer(Array.isArray(data) ? data : []);
+        } catch (err) {
+            console.error("Failed to fetch signers", err);
+            setSignersFromServer([]);
+        }
+    };
 
     const handleUpload = (file: File, url: string, docType: string) => {
         setFile(file);
@@ -102,6 +115,9 @@ const Verify: React.FC = () => {
             }
 
             setVerifyResultV2(result);
+
+            await fetchSigners(documentId);
+
         } catch (error) {
             try {
                 const fallback = await fetch('http://localhost:8083/signatures/verify', {
@@ -129,6 +145,7 @@ const Verify: React.FC = () => {
         setVerificationUsedFallback(false);
         setVerifyResultV2(null);
         setDocType(null);
+        setSignersFromServer([]);
     };
 
     return (
@@ -164,6 +181,49 @@ const Verify: React.FC = () => {
                                     );
                                 })}
                             </ul>
+                        )}
+                        {signersFromServer.length > 0 && (
+                            <div className="verify-comparison-section">
+                                {(() => {
+                                    const verifiedIds = verifyResultV2.map(sig => sig.authorId);
+                                    const missing = signersFromServer.filter(s => !verifiedIds.includes(s.userId));
+                                    const extra = verifiedIds.filter(v => !signersFromServer.some(s => s.userId === v));
+
+                                    if (missing.length === 0 && extra.length === 0) {
+                                        return <p className="verify-success">✅ All expected signers have valid signatures. Document is verified.</p>;
+                                    } else {
+                                        return (
+                                            <>
+                                                {missing.length > 0 && (
+                                                    <div className="verify-warning">
+                                                        ⚠️ Missing Signatures from:
+                                                        <ul className="verify-signer-list">
+                                                            {missing.map(m => (
+                                                                <li className="verify-signer-item verify-invalid" key={m.userId}>
+                                                                    {m.fullName} ({m.email}) - Status: {m.status}
+                                                                </li>
+                                                            ))}
+                                                        </ul>
+                                                    </div>
+                                                )}
+
+                                                {extra.length > 0 && (
+                                                    <div className="verify-warning">
+                                                        ⚠️ Unknown signers present:
+                                                        <ul className="verify-signer-list">
+                                                            {extra.map((id, i) => (
+                                                                <li className="verify-signer-item verify-invalid" key={i}>
+                                                                    Signer with ID {id} was not expected
+                                                                </li>
+                                                            ))}
+                                                        </ul>
+                                                    </div>
+                                                )}
+                                            </>
+                                        );
+                                    }
+                                })()}
+                            </div>
                         )}
                         <button onClick={handleClear} className="verify-clear">Clear</button>
                     </>
