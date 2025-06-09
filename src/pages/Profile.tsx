@@ -39,6 +39,7 @@ const Profile: React.FC = () => {
     const [editedDocument, setEditedDocument] = useState<DocumentItem | null>(null);
     const [showSignModal, setShowSignModal] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [fetchedSignerList, setFetchedSignerList] = useState(false);
     const [templates, setTemplates] = useState<DocumentItem[]>([]);
     const [openedTemplate, setOpenedTemplate] = useState<DocumentItem | null>(null);
     const [templateFields, setTemplateFields] = useState<{ name: string; type: string; }[]>([]);
@@ -209,6 +210,7 @@ const Profile: React.FC = () => {
         setSigners([]);
         setSequentialSigning(false);
         setSignersFromServer([]);
+        setFetchedSignerList(false);
     };
 
     const proceedToDrafts = async () => {
@@ -320,7 +322,47 @@ const Profile: React.FC = () => {
         }
     };
 
+    const fetchListSigners = async (documentId: string) => {
+        try {
+            const response = await fetch("http://localhost:8082/documents/"+documentId+"/metadata/signers");
+            const data = await response.json();
+            if (data && Array.isArray(data) && data.length > 0) {
+                setSigners(data);
+            }
+        } catch (err) {
+            console.log("Empty signer list initiated.");
+            //console.error("Failed to fetch signers", err);
+        } finally {
+            // overwrite fix?
+        }
+    };
+
     const saveEditedSigners = async () => {
+        if (!editedDocument) return;
+        const documentId = editedDocument.id;
+        const token = getAccessToken();
+
+        try {
+            const response = await fetch("http://localhost:8082/documents/"+documentId+"/metadata/signers", {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify(signers)
+            });
+
+            if (!response.ok) throw new Error("Failed to edit document data.");
+
+            alert("Document data saved to drafts!");
+            clearDocument();
+            fetchDocumentMetadata();
+            setSelected('Drafts');
+            setBasketOpen(true);
+        } catch (err) {
+            console.error(err);
+            alert("Failed to update document data.");
+        }
     }
 
     const startApprovalProcess = async () => {
@@ -411,6 +453,10 @@ const Profile: React.FC = () => {
                 );
             }
         } else if (documentStep === 2) {
+            if (!fetchedSignerList) {
+                fetchListSigners(editedDocument!.id);
+                setFetchedSignerList(true);
+            }
             return (
                 <div className="document-settings">
                     <h2>Document Settings</h2>

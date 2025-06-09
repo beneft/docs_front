@@ -127,11 +127,22 @@ const DraggableSigner: React.FC<DraggableSignerProps> = ({
 
 const SignerList: React.FC<SignerListProps> = ({ signers, setSigners , sequentialSigning, setSequentialSigning} ) => {
     const { user } = useAuth();
+    const [fetchedSigners, setFetchedSigners] = useState(false);
     useEffect(() => {
-        if (user) {
+        console.log(signers);
+        setFetchedSigners(false);
+        if (user && signers.length === 0) {
             setSigners([{ id: generateId(), userId:user.id, fullName: user.firstName+" "+user.lastName, email: user.email, position: user.position || ""}]);
+            setFetchedSigners(true);
+        } else if (user && signers.length > 0 && !fetchedSigners){
+            const isCurrentUserSigner = signers.some(signer => signer.userId === user!.id);
+            const isSequential = signers.every(signer => signer.order !== -1 && signer.order !== undefined);
+
+            setIWillSign(isCurrentUserSigner);
+            setSequentialSigning(isSequential);
+            setFetchedSigners(true);
         }
-    }, [user]);
+    }, [user, signers.length, setSigners]);
     const [showSignerModal, setShowSignerModal] = useState(false);
     const [showDeputyModal, setShowDeputyModal] = useState(false);
     const [editingSignerId, setEditingSignerId] = useState<string | null>(null);
