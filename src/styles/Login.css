@@ -73,3 +73,19 @@
 .auth-footer a:hover {
     text-decoration: underline;
 }
+
+.auth-link-button {
+    background: none !important;
+    border: none !important;
+    padding: 0;
+    margin: 0 !important;
+    color: var(--color-crimson, #007bff) !important;
+    text-decoration: underline !important;
+    cursor: pointer;
+    font: inherit !important;
+}
+.auth-success {
+    color: green;
+    font-weight: bold;
+    margin: 1rem 0;
+}

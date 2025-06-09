@@ -4,8 +4,12 @@ import './UserInfo.css';
 
 export const UserProfilePanel = ({ user }: { user: User }) => {
     const [editing, setEditing] = useState(false);
+    const [changingPassword, setChangingPassword] = useState(false);
     const [formData, setFormData] = useState<User>(user);
-    const {refresh, getAccessToken} = useAuth();
+    const [oldPassword, setOldPassword] = useState('');
+    const [newPassword, setNewPassword] = useState('');
+    const [confirmNewPassword, setConfirmNewPassword] = useState('');
+    const { refresh, getAccessToken } = useAuth();
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -13,8 +17,14 @@ export const UserProfilePanel = ({ user }: { user: User }) => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        if (changingPassword && newPassword !== confirmNewPassword) {
+            alert("New passwords do not match");
+            return;
+        }
+
         try {
-            const res = await fetch("http://localhost:8081/api/profile", {
+            const profileRes = await fetch("http://localhost:8081/api/profile", {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
@@ -23,12 +33,37 @@ export const UserProfilePanel = ({ user }: { user: User }) => {
                 body: JSON.stringify(formData),
             });
 
-            if (!res.ok) throw new Error("Update failed");
+            if (!profileRes.ok) throw new Error("Profile update failed");
+
+            if (changingPassword) {
+                const passRes = await fetch("http://localhost:8081/api/auth/password", {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${getAccessToken()}`,
+                    },
+                    body: JSON.stringify({
+                        email: formData.email,
+                        oldPassword,
+                        newPassword,
+                    }),
+                });
+
+                if (!passRes.ok) {
+                    const body = await passRes.text();
+                    throw new Error(body || "Password change failed");
+                }
+            }
+
             alert("Profile updated successfully");
             await refresh();
             setEditing(false);
-        } catch (err) {
-            alert("Error updating profile");
+            setChangingPassword(false);
+            setOldPassword('');
+            setNewPassword('');
+            setConfirmNewPassword('');
+        } catch (err: any) {
+            alert(err.message || "Update failed");
             console.error(err);
         }
     };
@@ -61,9 +96,33 @@ export const UserProfilePanel = ({ user }: { user: User }) => {
                         <Input label="Phone" name="phone" value={formData.phone} onChange={handleChange} />
                         <Input label="Email (read-only)" name="email" value={formData.email} readOnly />
                     </div>
+
+                    {!changingPassword && (
+                        <button
+                            type="button"
+                            className="userinfo-change-password-btn"
+                            onClick={() => setChangingPassword(true)}
+                        >
+                            Change Password
+                        </button>
+                    )}
+
+                    {changingPassword && (
+                        <div className="userinfo-password-section">
+                            <InputPassword label="Old Password" value={oldPassword} onChange={setOldPassword} />
+                            <InputPassword label="New Password" value={newPassword} onChange={setNewPassword} />
+                            <InputPassword label="Confirm New Password" value={confirmNewPassword} onChange={setConfirmNewPassword} />
+                        </div>
+                    )}
+
                     <div className="userinfo-btn-row">
                         <button type="submit" className="userinfo-submit-btn">Confirm</button>
-                        <button type="button" className="userinfo-cancel-btn" onClick={() => setEditing(false)}>Cancel</button>
+                        <button type="button" className="userinfo-cancel-btn" onClick={() => {
+                            setEditing(false);
+                            setChangingPassword(false);
+                        }}>
+                            Cancel
+                        </button>
                     </div>
                 </form>
             )}
@@ -103,5 +162,24 @@ const Input = ({
     </div>
 );
 
+const InputPassword = ({
+                           label,
+                           value,
+                           onChange,
+                       }: {
+    label: string;
+    value: string;
+    onChange: (val: string) => void;
+}) => (
+    <div className="userinfo-input-group">
+        <label className="userinfo-input-label">{label}</label>
+        <input
+            className="userinfo-input"
+            type="password"
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+        />
+    </div>
+);
 
 export default UserProfilePanel;

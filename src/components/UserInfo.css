@@ -126,3 +126,20 @@
 .userinfo-cancel-btn:hover {
     background: #5a6268;
 }
+
+.userinfo-password-section {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+}
+
+.userinfo-change-password-btn {
+    margin-bottom: 1rem;
+    background-color: #ddd;
+    border: none;
+    padding: 8px 12px;
+    cursor: pointer;
+}
+
+.userinfo-change-password-btn:hover {
+    background-color: #ccc;
+}

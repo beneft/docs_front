@@ -320,6 +320,9 @@ const Profile: React.FC = () => {
         }
     };
 
+    const saveEditedSigners = async () => {
+    }
+
     const startApprovalProcess = async () => {
         if (!editedDocument) return;
         const documentId = editedDocument.id;
@@ -568,7 +571,7 @@ const Profile: React.FC = () => {
                 <div className="right-controls">
                     <button onClick={() => setDocumentStep(1)}>Back to step 1</button>
                     <p><br></br>Almost done. Click below to finish and save to Drafts.</p>
-                    {/*<button onClick={saveEditedSigners}>Save & Exit</button>*/}
+                    <button onClick={saveEditedSigners}>Save & Exit</button>
                     <button onClick={startApprovalProcess}>Finish{loading && <span className="spinner" />}</button>
                 </div>
             );
