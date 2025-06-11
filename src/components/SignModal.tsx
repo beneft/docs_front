@@ -82,6 +82,7 @@ const SignModal = ({
                                                             documentId: openedDocument.id,
                                                             authorId: guest ? "-1" : user?.id,
                                                             authorName: guest ? guest : (user?.firstName + " " + user?.lastName),
+                                                            authorEmail: guest ? guest : user?.email,
                                                             cms: signature
                                                         })
                                                     });

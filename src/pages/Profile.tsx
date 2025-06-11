@@ -19,9 +19,16 @@ export interface SignerDTO {
     fullName: string;
     email: string;
     position: string;
+    deputy?: DeputyDTO;
     status: 'PENDING' | 'SIGNED' | 'DECLINED';
     canSignNow: boolean;
 }
+
+type DeputyDTO = {
+    id: string;
+    name: string;
+    email: string;
+};
 
 const Profile: React.FC = () => {
     const { t } = useTranslation('profile');
@@ -728,10 +735,11 @@ const Profile: React.FC = () => {
                     <button onClick={startApprovalProcess}>{t('finish')}{loading && <span className="spinner" />}</button>
                 </div>
             );
-        } else if (['Sent','Received','Closed'].includes(selected || '')) {
-            return (
-                <p>sleep</p>
-            );
+        //}
+        //else if (['Sent','Received','Closed'].includes(selected || '')) {
+            // return (
+            //     <p>sleep</p>
+            // );
         } else if (openedDocument) {
             return (
                 <div className="right-controls">

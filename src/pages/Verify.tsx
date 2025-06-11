@@ -10,6 +10,7 @@ interface SignatureDTO {
     documentId: string;
     authorId: string;
     authorName: string;
+    authorEmail: string;
     authorOrganization: string;
     signingDate: string; // ISO string from backend
     cmsValid: boolean;
@@ -25,6 +26,7 @@ interface CmsDetailsDTO {
 interface V2SignatureVerification {
     authorId: string;
     authorName: string;
+    authorEmail: string;
     verificationResponse: V2VerificationResponse | null;
 }
 
@@ -202,9 +204,16 @@ const Verify: React.FC = () => {
                         {signersFromServer.length > 0 && (
                             <div className="verify-comparison-section">
                                 {(() => {
+                                    console.log(verifyResultV2);
+                                    console.log(signersFromServer);
                                     const verifiedIds = verifyResultV2.map(sig => sig.authorId);
-                                    const missing = signersFromServer.filter(s => !verifiedIds.includes(s.userId));
-                                    const extra = verifiedIds.filter(v => !signersFromServer.some(s => s.userId === v));
+                                    const verifiedEmails = verifyResultV2.map(sig => sig.authorEmail);
+                                    const missing = signersFromServer.filter(s => !verifiedIds.includes(s.userId) && !verifiedEmails.includes(s.email) && !verifiedEmails.includes(s.deputy?.email||''));
+                                    const extra = verifyResultV2.filter(sig =>
+                                        !signersFromServer.some(s =>
+                                            s.userId === sig.authorId || s.email === sig.authorEmail || s.deputy?.email === sig.authorEmail
+                                        )
+                                    );
 
                                     const anyInvalidCert = verifyResultV2.some(sig =>
                                         sig.verificationResponse?.valid === false || sig.verificationResponse === null
@@ -276,9 +285,9 @@ const Verify: React.FC = () => {
                                                 <div className="verify-warning">
                                                     ⚠️ {t('unknown-signs')}:
                                                     <ul className="verify-signer-list">
-                                                        {extra.map((id, i) => (
+                                                        {extra.map((sig, i) => (
                                                             <li className="verify-signer-item verify-invalid" key={i}>
-                                                                {t('unknown-1')} {id} {t('unknown-2')}
+                                                                {t('unknown-1')} {sig.authorId} {t('unknown-2')}
                                                             </li>
                                                         ))}
                                                     </ul>
