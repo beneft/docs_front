@@ -16,5 +16,8 @@
   "backToLogin": "Назад ко входу",
   "errorInvalidCredentials": "Неверная почта или пароль",
   "errorLoginFailed": "Вход не успешен",
-  "errorRestoreFailed": "Ошибка при отправке ссылки восстановления"
+  "errorRestoreFailed": "Ошибка при отправке ссылки восстановления",
+  "invalidEmail": "Введите верный формат почты",
+  "emptyPassword": "Пароль не может быть пустым",
+  "loading": "Вход..."
 }

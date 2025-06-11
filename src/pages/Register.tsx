@@ -1,4 +1,4 @@
-import React , {useEffect, useState} from 'react';
+import React, { useState } from 'react';
 import '../styles/Register.css';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -18,14 +18,31 @@ const Register: React.FC = () => {
     const [position, setPosition] = useState('');
     const [phone, setPhone] = useState('');
     const [error, setError] = useState<string | null>(null);
+    const [loading, setLoading] = useState(false);
+
+    const validateEmail = (email: string) =>
+        /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
     const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault();
+        setError(null);
+
+        if (!validateEmail(email)) {
+            setError(t('err-invalid-email'));
+            return;
+        }
+
+        if (password.length < 6) {
+            setError(t('err-short-password'));
+            return;
+        }
 
         if (password !== confirmPassword) {
             setError(t('err-pass-do-not-match'));
             return;
         }
+
+        setLoading(true);
 
         try {
             const response = await fetch('http://localhost:8081/api/auth/register', {
@@ -43,13 +60,16 @@ const Register: React.FC = () => {
             });
 
             if (!response.ok) {
-                throw new Error('Registration failed.');
+                const data = await response.json();
+                throw new Error(data?.message || t('err-register-failed'));
             }
 
             alert(t('register-success'));
             navigate('/');
         } catch (err: any) {
-            setError(err.message || 'Registration failed');
+            setError(err.message || t('err-register-failed'));
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -73,18 +93,19 @@ const Register: React.FC = () => {
                 <label>{t('confirm-password')}</label>
                 <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required />
 
-                <label>{t('organization')}</label>
+                <label>{t('organization')} <span className="optional">({t('optional')})</span></label>
                 <input type="text" value={organization} onChange={(e) => setOrganization(e.target.value)} />
 
-                <label>{t('position')}</label>
+                <label>{t('position')} <span className="optional">({t('optional')})</span></label>
                 <input type="text" value={position} onChange={(e) => setPosition(e.target.value)} />
 
-                <label>{t('phone')}</label>
+                <label>{t('phone')} <span className="optional">({t('optional')})</span></label>
                 <input type="text" value={phone} onChange={(e) => setPhone(e.target.value)} />
 
                 {error && <div className="auth-error">{error}</div>}
-
-                <button type="submit">{t('register-button')}</button>
+                <button type="submit" disabled={loading}>
+                    {loading ? t('loading') + '...' : t('register-button')}
+                </button>
             </form>
             <p className="auth-footer">
                 {t('already-have-account')} <a href="/login">{t('login-here')}</a>

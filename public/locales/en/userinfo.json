@@ -20,5 +20,7 @@
   "profile-update-failed": "Profile update failed",
   "password-change-failed": "Password change failed",
   "profile-update-success": "Profile updated successfully",
-  "update-failed": "Update failed"
+  "update-failed": "Update failed",
+  "error-required": "This field is required.",
+  "pass-too-short": "Password must be at least 6 characters long."
 }

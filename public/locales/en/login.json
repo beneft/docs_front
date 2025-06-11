@@ -16,5 +16,8 @@
   "backToLogin": "Back to Login",
   "errorInvalidCredentials": "Invalid credentials",
   "errorLoginFailed": "Login failed",
-  "errorRestoreFailed": "Failed to send restore link"
+  "errorRestoreFailed": "Failed to send restore link",
+  "invalidEmail": "Please enter a valid email address.",
+  "emptyPassword": "Password cannot be empty.",
+  "loading": "Please wait..."
 }

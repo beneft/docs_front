@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import '../styles/Login.css';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -14,9 +14,24 @@ const Login: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [isRestoreMode, setIsRestoreMode] = useState(false);
     const [restoreSent, setRestoreSent] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+
+    const validateEmail = (email: string) =>
+        /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
+        setError(null);
+
+        if (!validateEmail(email)) {
+            return setError(t('invalidEmail'));
+        }
+
+        if (!password) {
+            return setError(t('emptyPassword'));
+        }
+
+        setIsLoading(true);
         try {
             const response = await fetch('http://localhost:8081/api/auth/login', {
                 method: 'POST',
@@ -31,11 +46,20 @@ const Login: React.FC = () => {
             navigate('/');
         } catch (err: any) {
             setError(err.message || t('errorLoginFailed'));
+        } finally {
+            setIsLoading(false);
         }
     };
 
     const handleRestore = async (e: React.FormEvent) => {
         e.preventDefault();
+        setError(null);
+
+        if (!validateEmail(email)) {
+            return setError(t('invalidEmail'));
+        }
+
+        setIsLoading(true);
         try {
             const response = await fetch('http://localhost:8081/api/auth/forgot-password', {
                 method: 'POST',
@@ -46,9 +70,10 @@ const Login: React.FC = () => {
             if (!response.ok) throw new Error(t('errorRestoreFailed'));
 
             setRestoreSent(true);
-            setError(null);
         } catch (err: any) {
             setError(err.message || t('errorRestoreFailed'));
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -64,7 +89,6 @@ const Login: React.FC = () => {
                         type="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        required
                         placeholder="you@example.com"
                     />
 
@@ -73,13 +97,14 @@ const Login: React.FC = () => {
                         type="password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        required
                         placeholder={t('passwordPlaceholder')}
                     />
 
                     {error && <div className="auth-error">{error}</div>}
 
-                    <button type="submit">{t('login')}</button>
+                    <button type="submit" disabled={isLoading}>
+                        {isLoading ? t('loading') : t('login')}
+                    </button>
 
                     <p className="auth-footer">
                         {t('noAccount')} <a href="/register">{t('register')}</a><br />
@@ -89,6 +114,7 @@ const Login: React.FC = () => {
                         onClick={() => {
                             setError(null);
                             setIsRestoreMode(true);
+                            setRestoreSent(false);
                         }}
                     >{t('restore')}</button>
                     </p>
@@ -102,11 +128,12 @@ const Login: React.FC = () => {
                                 type="email"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                required
                                 placeholder="you@example.com"
                             />
                             {error && <div className="auth-error">{error}</div>}
-                            <button type="submit">{t('sendRestore')}</button>
+                            <button type="submit" disabled={isLoading}>
+                                {isLoading ? t('loading') : t('sendRestore')}
+                            </button>
                         </>
                     ) : (
                         <>

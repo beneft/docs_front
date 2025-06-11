@@ -14,5 +14,10 @@
   "phone": "Phone",
   "register-button": "Register",
   "already-have-account": "Already have an account?",
-  "login-here": "Login here"
+  "login-here": "Login here",
+  "optional": "optional",
+  "err-invalid-email": "Please enter a valid email.",
+  "err-short-password": "Password must be at least 6 characters.",
+  "err-register-failed": "Registration failed.",
+  "loading": "Registering"
 }
