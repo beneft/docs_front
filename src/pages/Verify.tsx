@@ -43,6 +43,11 @@ interface V2VerificationResponse {
                 dn: string;
                 organization?: string;
             };
+            issuer:{
+                commonName: string;
+                country:string;
+                dn:string;
+            }
         }[];
         tsp?: {
             genTime: string;
@@ -170,14 +175,24 @@ const Verify: React.FC = () => {
 
                                     const valid = cert?.valid ?? false;
                                     const subject = cert?.subject;
+                                    const issuer = cert?.issuer;
+
+                                    let givenName = "N/A";
+                                    if (subject?.dn) {
+                                        const match = subject.dn.match(/GIVENNAME=([^,]+)/i);
+                                        if (match) {
+                                            givenName = match[1];
+                                        }
+                                    }
 
                                     return (
                                         <li key={index} className={`verify-signer-item ${valid ? "verified" : "verify-invalid"}`}>
-                                            <strong>{sig.authorName} | {subject?.commonName} | {t('cms-iin')}: {subject?.iin}</strong><br />
+                                            <strong> | {subject?.commonName}{givenName !== "N/A" && ` ${givenName}`} | {t('cms-iin')}: {subject?.iin}</strong><br />
                                             {t('cms-org')}: {subject?.organization ?? "N/A"}<br />
                                             {t('cms-signed-date')}: {tspTime ? new Date(tspTime).toLocaleString() : t('cms-unknown')}<br />
                                             {t('cert-valid-from')}: {cert?.notBefore ? new Date(cert.notBefore).toLocaleDateString() : "?"}<br />
                                             {t('cert-valid-to')}: {cert?.notAfter ? new Date(cert.notAfter).toLocaleDateString() : "?"}<br />
+                                            {t('cert-issuer')}: {issuer?.commonName ?? "N/A"}<br />
                                             {t('cert-status')}: {valid ? t('cert-valid') : t('cert-invalid')}
                                         </li>
                                     );
@@ -191,39 +206,67 @@ const Verify: React.FC = () => {
                                     const missing = signersFromServer.filter(s => !verifiedIds.includes(s.userId));
                                     const extra = verifiedIds.filter(v => !signersFromServer.some(s => s.userId === v));
 
-                                    if (missing.length === 0 && extra.length === 0) {
-                                        return <p className="verify-success">✅ {t('all-signed')}</p>;
-                                    } else {
-                                        return (
-                                            <>
-                                                {missing.length > 0 && (
-                                                    <div className="verify-warning">
-                                                        ⚠️ {t('missing-signs')}:
-                                                        <ul className="verify-signer-list">
-                                                            {missing.map(m => (
-                                                                <li className="verify-signer-item verify-invalid" key={m.userId}>
-                                                                    {m.fullName} ({m.email}) - {t('missing-status')}: {m.status}
-                                                                </li>
-                                                            ))}
-                                                        </ul>
-                                                    </div>
-                                                )}
+                                    const nameMismatches = verifyResultV2
+                                        .map((sig) => {
+                                            const subjectCN = sig.verificationResponse?.signers?.[0]?.certificates?.[0]?.subject?.commonName;
+                                            if (subjectCN && subjectCN.toLowerCase() !== sig.authorName.toLowerCase()) {
+                                                return {
+                                                    authorId: sig.authorId,
+                                                    authorName: sig.authorName,
+                                                    subjectCN: subjectCN,
+                                                };
+                                            }
+                                            return null;
+                                        })
+                                        .filter(Boolean);
 
-                                                {extra.length > 0 && (
-                                                    <div className="verify-warning">
-                                                        ⚠️ {t('unknown-signs')}:
-                                                        <ul className="verify-signer-list">
-                                                            {extra.map((id, i) => (
-                                                                <li className="verify-signer-item verify-invalid" key={i}>
-                                                                    {t('unknown-1')} {id} {t('unknown-2')}
-                                                                </li>
-                                                            ))}
-                                                        </ul>
-                                                    </div>
-                                                )}
-                                            </>
-                                        );
-                                    }
+                                    return (
+                                        <>
+                                            {missing.length === 0 && extra.length === 0 && (
+                                                <p className="verify-success">✅ {t('all-signed')}</p>
+                                            )}
+
+                                            {missing.length > 0 && (
+                                                <div className="verify-warning">
+                                                    ⚠️ {t('missing-signs')}:
+                                                    <ul className="verify-signer-list">
+                                                        {missing.map(m => (
+                                                            <li className="verify-signer-item verify-invalid" key={m.userId}>
+                                                                {m.fullName} ({m.email}) - {t('missing-status')}: {m.status}
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                </div>
+                                            )}
+
+                                            {extra.length > 0 && (
+                                                <div className="verify-warning">
+                                                    ⚠️ {t('unknown-signs')}:
+                                                    <ul className="verify-signer-list">
+                                                        {extra.map((id, i) => (
+                                                            <li className="verify-signer-item verify-invalid" key={i}>
+                                                                {t('unknown-1')} {id} {t('unknown-2')}
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                </div>
+                                            )}
+
+                                            {nameMismatches.length > 0 && (
+                                                <div className="verify-warning">
+                                                    ⚠️ {t('name-mismatch-title')}:
+                                                    <ul className="verify-signer-list">
+                                                        {nameMismatches.map((m, i) => (
+                                                            <li className="verify-signer-item verify-invalid" key={i}>
+                                                                {t('author-mismatch')}: {m?.authorName} <br />
+                                                                {t('cert-mismatch')}: {m?.subjectCN}
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                </div>
+                                            )}
+                                        </>
+                                    );
                                 })()}
                             </div>
                         )}

@@ -54,6 +54,7 @@
 
 .verify-warning {
     padding: 0.5rem 1rem;
+    margin-top:1rem;
     margin-bottom: 1rem;
     background-color: #fff3cd;
     border-left: 4px solid #ffecb5;
