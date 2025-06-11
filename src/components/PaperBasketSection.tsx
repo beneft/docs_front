@@ -8,6 +8,8 @@ export interface DocumentItem {
     name: string;
     contentType: string;
     previewUrl: string;
+    expirationDate: Date | null;
+    status: string;
 }
 
 interface PaperBasketSectionProps {
@@ -23,9 +25,14 @@ const PaperBasketSection: React.FC<PaperBasketSectionProps> = ({ title, items, o
             <div className="document-grid">
                 {items.map((doc) => {
                     const isDocFile = doc.contentType.includes('msword') || doc.contentType.includes('officedocument.wordprocessingml.document');
+                    const isExpired = doc.status.toUpperCase() === "EXPIRED";
 
                     return (
-                        <div key={doc.id} className="document-item" onClick={() => onItemClick?.(doc)}>
+                        <div
+                            key={doc.id}
+                            className={`document-item ${isExpired ? 'expired-document' : ''}`}
+                            onClick={() => onItemClick?.(doc)}
+                        >
                             {isDocFile ? (
                                 <WordPreview fileUrl={doc.previewUrl} full={false} />
                             ) : (

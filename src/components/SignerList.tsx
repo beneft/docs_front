@@ -11,6 +11,7 @@ export type Signer = {
     fullName: string;
     position: string;
     email: string;
+    iin: string
 
     deputy? : Deputy | null;
 
@@ -130,7 +131,7 @@ const SignerList: React.FC<SignerListProps> = ({ signers, setSigners , sequentia
         console.log(signers);
         setFetchedSigners(false);
         if (user && signers.length === 0) {
-            setSigners([{ id: generateId(), userId:user.id, fullName: user.firstName+" "+user.lastName, email: user.email, position: user.position || ""}]);
+            setSigners([{ id: generateId(), userId:user.id, fullName: user.lastName+" "+user.firstName, email: user.email, position: user.position || "", iin: user.iin || ""}]);
             setFetchedSigners(true);
         } else if (user && signers.length > 0 && !fetchedSigners){
             const isCurrentUserSigner = signers.some(signer => signer.userId === user!.id);
@@ -149,7 +150,7 @@ const SignerList: React.FC<SignerListProps> = ({ signers, setSigners , sequentia
     const [findMessage, setFindMessage] = useState<string | null>(null);
     const [foundUserId, setFoundUserId] = useState<string | null>(null);
 
-    const [form, setForm] = useState({ fullName: "", email: "", position: ""});
+    const [form, setForm] = useState({ fullName: "", email: "", position: "", iin: ""});
 
     const [deputyForm, setDeputyForm] = useState({ name: "", email: "" });
     const [isEditingDeputy, setIsEditingDeputy] = useState(false);
@@ -180,10 +181,10 @@ const SignerList: React.FC<SignerListProps> = ({ signers, setSigners , sequentia
         setFindMessage(null);
         if (signerId) {
             const signer = signers.find((s) => s.id === signerId)!;
-            setForm({ fullName: signer.fullName, email: signer.email , position: signer.position });
+            setForm({ fullName: signer.fullName, email: signer.email , position: signer.position, iin: signer.iin });
             setEditingSignerId(signerId);
         } else {
-            setForm({ fullName: "", email: "", position: "" });
+            setForm({ fullName: "", email: "", position: "", iin: "" });
             setEditingSignerId(null);
         }
         setShowSignerModal(true);
@@ -195,9 +196,28 @@ const SignerList: React.FC<SignerListProps> = ({ signers, setSigners , sequentia
             if (!response.ok) throw new Error(t('user-not-found'));
             const data = await response.json();
             setForm({
-                fullName: data.firstName + " " + data.lastName,
+                fullName: data.lastName + " " + data.firstName,
                 email: data.email,
-                position: data.position || ""
+                position: data.position || "",
+                iin: data.iin || ""
+            });
+            setFoundUserId(data.id);
+            setFindMessage("✅ " + t('user-found'));
+        } catch (error) {
+            setFindMessage("❌ " + t('user-not-found'));
+        }
+    };
+
+    const findUserByIIN = async () => {
+        try {
+            const response = await fetch(`http://localhost:8081/api/profile/by-iin?iin=${encodeURIComponent(form.iin)}`);
+            if (!response.ok) throw new Error(t('user-not-found'));
+            const data = await response.json();
+            setForm({
+                fullName: data.lastName + " " + data.firstName,
+                email: data.email,
+                position: data.position || "",
+                iin: data.iin || ""
             });
             setFoundUserId(data.id);
             setFindMessage("✅ " + t('user-found'));
@@ -286,9 +306,10 @@ const SignerList: React.FC<SignerListProps> = ({ signers, setSigners , sequentia
                         [...prev, {
                             id: generateId(),
                             userId: user.id,
-                            fullName: user.firstName+" "+user.lastName,
+                            fullName: user.lastName+" "+user.firstName,
                             email: user.email,
-                            position: user.position || ""
+                            position: user.position || "",
+                            iin: user.iin || ""
                         }],
                         sequentialSigning
                     )
@@ -356,6 +377,13 @@ const SignerList: React.FC<SignerListProps> = ({ signers, setSigners , sequentia
                                 onChange={(e) => setForm({ ...form, email: e.target.value })}
                             />
                             <button onClick={findUserByEmail}>{t('signers.findByEmail')}</button>
+                            <input
+                                className="signerlist-input"
+                                placeholder={t('signers.iin')}
+                                value={form.iin}
+                                onChange={(e) => setForm({ ...form, iin: e.target.value })}
+                            />
+                            <button onClick={findUserByIIN}>{t('signers.findByIIN')}</button>
                             <input
                                 className="signerlist-input"
                                 placeholder={t('signers.position')}

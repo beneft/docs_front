@@ -12,6 +12,7 @@ import { useAuth } from '../context/AuthContext';
 import UserProfilePanel from '../components/UserInfo';
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from '../components/LanguageSwitcher';
+import TagManager from "../components/TagManager";
 
 export interface SignerDTO {
     userId: string;
@@ -47,6 +48,10 @@ const Profile: React.FC = () => {
     const [openedTemplate, setOpenedTemplate] = useState<DocumentItem | null>(null);
     const [templateFields, setTemplateFields] = useState<{ name: string; type: string; }[]>([]);
     const [fieldValues, setFieldValues] = useState<{ [key: string]: string }>({});
+    const [expirationYears, setExpirationYears] = useState(0);
+    const [expirationMonths, setExpirationMonths] = useState(0);
+    const [expirationDays, setExpirationDays] = useState(0);
+    const [selectedTags, setSelectedTags] = useState<string[]>([]);
     const { user , login, getAccessToken} = useAuth();
     const navigate = useNavigate();
     const [signersFromServer, setSignersFromServer] = useState<SignerDTO[]>([]);
@@ -86,7 +91,9 @@ const Profile: React.FC = () => {
                     id: d.id,
                     name: d.name,
                     contentType: d.contentType,
-                    previewUrl: `http://localhost:8084/templates/${d.id}`
+                    previewUrl: `http://localhost:8084/templates/${d.id}`,
+                    expirationDate: null,
+                    status: ""
                 }));
                 setTemplates(fullDocs);
             })
@@ -113,13 +120,15 @@ const Profile: React.FC = () => {
                 }
             );
             if (!uploadedRes.ok) throw new Error("Failed to fetch uploaded documents");
-            const uploadedData: { id: string; name: string; contentType: string; type: string }[] = await uploadedRes.json();
+            const uploadedData: { id: string; name: string; contentType: string; expirationDate: Date; status: string; type: string }[] = await uploadedRes.json();
 
             const uploadedDocs = uploadedData.map((d) => ({
                 id: d.id,
                 name: d.name,
                 contentType: d.contentType,
                 previewUrl: `http://localhost:8082/documents/${d.id}`,
+                expirationDate: d.expirationDate,
+                status: d.status,
                 type: d.type,
             }));
 
@@ -156,6 +165,8 @@ const Profile: React.FC = () => {
                 name: d.name,
                 contentType: d.contentType,
                 previewUrl: `http://localhost:8082/documents/${d.id}`,
+                expirationDate: d.expirationDate,
+                status: d.status,
                 type: d.type
             }));
 
@@ -214,6 +225,9 @@ const Profile: React.FC = () => {
         setSequentialSigning(false);
         setSignersFromServer([]);
         setFetchedSignerList(false);
+        setExpirationDays(0);
+        setExpirationYears(0);
+        setExpirationMonths(0);
     };
 
     const proceedToDrafts = async () => {
@@ -259,6 +273,7 @@ const Profile: React.FC = () => {
 
         const formData = new FormData();
         formData.append('file', renamedFile);
+
         if (user != null) {
             formData.append('metadata', JSON.stringify({
                 name: finalName,
@@ -362,7 +377,9 @@ const Profile: React.FC = () => {
             fetchDocumentMetadata();
             setSelected('Drafts');
             setBasketOpen(true);
+            setLoading(false);
         } catch (err) {
+            setLoading(false);
             console.error(err);
             alert(t('drafts-fail'));
         }
@@ -379,8 +396,47 @@ const Profile: React.FC = () => {
             signers: signers,
             currentSignerIndex: 0
         };
+        let expirationDatePayload: string | null = null;
+        if (expirationYears !== 0 || expirationMonths !== 0 || expirationDays !== 0) {
+            const now = new Date();
+            const expirationDate = new Date(
+                now.getFullYear() + expirationYears,
+                now.getMonth() + expirationMonths,
+                now.getDate() + expirationDays
+            );
+            const isoString = expirationDate.toISOString();
+            expirationDatePayload = isoString.replace(/Z$/, '');
+        }
 
         try {
+            const responseTag = await fetch("http://localhost:8082/documents/" + documentId + "/metadata/tags", {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify(selectedTags.map(t => t.replace(/^"+|"+$/g, '')))
+            });
+
+            if (!responseTag.ok) {
+                throw new Error("Failed to add tags.");
+            }
+
+            if (expirationDatePayload !== null) {
+                const responseExp = await fetch(`http://localhost:8082/documents/${documentId}/metadata/expiration`, {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${token}`
+                    },
+                    body: JSON.stringify(expirationDatePayload)
+                });
+
+                if (!responseExp.ok) {
+                    throw new Error("Failed to update expiration date.");
+                }
+            }
+
             const response = await fetch("http://localhost:8083/approval/start", {
                 method: "POST",
                 headers: {
@@ -463,6 +519,54 @@ const Profile: React.FC = () => {
             return (
                 <div className="document-settings">
                     <h2>{t('doc-settings')}</h2>
+
+                    <div className="expiration-selector">
+                        <label className="section-label">{t('exp-period')}:</label>
+                        <div style={{ display: 'flex', gap: '1rem' }}>
+                            <div className="expiration-field">
+                                <label htmlFor="years-input" className="exp-input-label">
+                                    {t('exp-years')}
+                                </label>
+                                <input
+                                    id="years-input"
+                                    type="number"
+                                    min="0"
+                                    value={expirationYears}
+                                    onChange={(e) => setExpirationYears(Number(e.target.value))}
+                                />
+                            </div>
+                            <div className="expiration-field">
+                                <label htmlFor="months-input" className="exp-input-label">
+                                    {t('exp-months')}
+                                </label>
+                                <input
+                                    id="months-input"
+                                    type="number"
+                                    min="0"
+                                    value={expirationMonths}
+                                    onChange={(e) => setExpirationMonths(Number(e.target.value))}
+                                />
+                            </div>
+                            <div className="expiration-field">
+                                <label htmlFor="days-input" className="exp-input-label">
+                                    {t('exp-days')}
+                                </label>
+                                <input
+                                    id="days-input"
+                                    type="number"
+                                    min="0"
+                                    value={expirationDays}
+                                    onChange={(e) => setExpirationDays(Number(e.target.value))}
+                                />
+                            </div>
+                        </div>
+                    </div>
+                    <TagManager
+                        userId={user!.id}
+                        documentId={editedDocument!.id}
+                        token={getAccessToken()}
+                        onSelectedTagsChange={(tags) => setSelectedTags(tags)}
+                    />
                     {/*<label><input type="checkbox" /> Confidential</label><br />*/}
                     {/*<label><input type="checkbox" /> Requires Signature</label><br />*/}
                     {/*<label><input type="checkbox" /> Send Notification</label><br />*/}
@@ -597,7 +701,7 @@ const Profile: React.FC = () => {
                         value={documentName}
                         onChange={(e) => setDocumentName(e.target.value)}
                     />
-                    <button onClick={() => proceedToDrafts()}>{t('proceed')}</button>
+                    <button onClick={() => proceedToDrafts()}>{t('proceed')}{loading && <span className="spinner" />}</button>
                 </div>
             );
         }
@@ -624,11 +728,16 @@ const Profile: React.FC = () => {
                     <button onClick={startApprovalProcess}>{t('finish')}{loading && <span className="spinner" />}</button>
                 </div>
             );
+        } else if (['Sent','Received','Closed'].includes(selected || '')) {
+            return (
+                <p>sleep</p>
+            );
         } else if (openedDocument) {
             return (
                 <div className="right-controls">
                     <button className="back-button" onClick={() => clearDocument()}>{t('back-list-btn')}</button>
                     <h2 className='signHeader'>{openedDocument.name}</h2>
+                    <p>{t('exp-date')} : {openedDocument.expirationDate?.toString() ?? t('exp-undefined')}</p>
                     <h3>{t('signees-title')}</h3>
                     <ul className="signer-list">
                         {(signersFromServer ?? []).map((signee, index) => {

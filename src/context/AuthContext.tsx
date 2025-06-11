@@ -8,6 +8,7 @@ export type User = {
     organization: string;
     position: string;
     phone: string;
+    iin: string;
 };
 
 type AuthResponse = {

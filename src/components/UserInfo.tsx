@@ -108,6 +108,7 @@ export const UserProfilePanel = ({ user }: { user: User }) => {
                 <ProfileField label={t('organization')} value={user.organization} />
                 <ProfileField label={t('position')} value={user.position} />
                 <ProfileField label={t('phone')} value={user.phone} />
+                <ProfileField label={t('iin')} value={user.iin} />
             </div>
 
             <button className="userinfo-edit-btn" onClick={() => setEditing(true)}>
@@ -123,6 +124,7 @@ export const UserProfilePanel = ({ user }: { user: User }) => {
                         <Input label={t('organization')} name="organization" value={formData.organization} onChange={handleChange} />
                         <Input label={t('position')} name="position" value={formData.position} onChange={handleChange} />
                         <Input label={t('phone')} name="phone" value={formData.phone} onChange={handleChange} />
+                        <Input label={t('iin')} name="iin" value={formData.iin} onChange={handleChange} />
                         <Input label={t('email-readonly')} name="email" value={formData.email} readOnly />
                     </div>
 

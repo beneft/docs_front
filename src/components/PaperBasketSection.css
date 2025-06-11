@@ -43,3 +43,7 @@
     height: 200px;
     text-align: center;
 }
+
+.expired-document {
+    background-color: rgba(255, 0, 0, 0.3);
+}

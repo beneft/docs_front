@@ -52,5 +52,11 @@
   "nav-basket-archive": "Archive",
   "nav-basket-deleted": "Deleted",
   "nav-templates": "Templates",
-  "nav-help": "Help"
+  "nav-help": "Help",
+  "exp-period": "Expiration period (leave 0 for undefined)",
+  "exp-days": "Days",
+  "exp-years": "Years",
+  "exp-months": "Months",
+  "exp-date": "Document will expire at",
+  "exp-undefined": "Undefined"
 }

@@ -35,7 +35,9 @@ const SignPage: React.FC = () => {
                 id: meta.id,
                 name: meta.name,
                 contentType: meta.contentType,
-                previewUrl: `http://localhost:8082/documents/${meta.id}`
+                previewUrl: `http://localhost:8082/documents/${meta.id}`,
+                expirationDate: meta.expirationDate,
+                status: meta.status
             };
 
             setOpenedDocument(document);

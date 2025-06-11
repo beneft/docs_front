@@ -17,6 +17,7 @@ const Register: React.FC = () => {
     const [organization, setOrganization] = useState('');
     const [position, setPosition] = useState('');
     const [phone, setPhone] = useState('');
+    const [iin, setIin] = useState('');
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
 
@@ -55,7 +56,8 @@ const Register: React.FC = () => {
                     lastName,
                     organization,
                     position,
-                    phone
+                    phone,
+                    iin
                 })
             });
 
@@ -101,6 +103,9 @@ const Register: React.FC = () => {
 
                 <label>{t('phone')} <span className="optional">({t('optional')})</span></label>
                 <input type="text" value={phone} onChange={(e) => setPhone(e.target.value)} />
+
+                <label>{t('iin')} <span className="optional">({t('optional')})</span></label>
+                <input type="text" value={iin} onChange={(e) => setIin(e.target.value)} />
 
                 {error && <div className="auth-error">{error}</div>}
                 <button type="submit" disabled={loading}>

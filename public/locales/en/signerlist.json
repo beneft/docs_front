@@ -13,7 +13,9 @@
     "name": "Name",
     "email": "Email",
     "position": "Position",
+    "iin": "IIN",
     "findByEmail": "Find by Email",
+    "findByIIN": "Find by IIN",
     "save": "Save",
     "cancel": "Cancel"
   },

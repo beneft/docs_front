@@ -65,3 +65,23 @@
 .verify-warning li {
     padding-left: 1rem;
 }
+
+.verify-success {
+    padding: 0.5rem 1rem;
+    margin-top:1rem;
+    margin-bottom: 1rem;
+    background-color: lightgreen;
+    border-left: 4px solid seagreen;
+    border-radius: 0.375rem;
+    color:black;
+}
+
+.verify-failure {
+    padding: 0.5rem 1rem;
+    margin-top:1rem;
+    margin-bottom: 1rem;
+    background-color: var(--color-crimson);
+    border-left: 4px solid var(--color-dark-crimson);
+    border-radius: 0.375rem;
+    color:white;
+}

@@ -19,5 +19,6 @@
   "err-invalid-email": "Please enter a valid email.",
   "err-short-password": "Password must be at least 6 characters.",
   "err-register-failed": "Registration failed.",
-  "loading": "Registering"
+  "loading": "Registering",
+  "iin": "IIN"
 }

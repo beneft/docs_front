@@ -206,24 +206,57 @@ const Verify: React.FC = () => {
                                     const missing = signersFromServer.filter(s => !verifiedIds.includes(s.userId));
                                     const extra = verifiedIds.filter(v => !signersFromServer.some(s => s.userId === v));
 
+                                    const anyInvalidCert = verifyResultV2.some(sig =>
+                                        sig.verificationResponse?.valid === false || sig.verificationResponse === null
+                                    );
+
                                     const nameMismatches = verifyResultV2
                                         .map((sig) => {
-                                            const subjectCN = sig.verificationResponse?.signers?.[0]?.certificates?.[0]?.subject?.commonName;
-                                            if (subjectCN && subjectCN.toLowerCase() !== sig.authorName.toLowerCase()) {
+                                            const subjectCN = sig.verificationResponse?.signers?.[0]?.certificates?.[0]?.subject?.commonName.toLowerCase();
+                                            const authorName = sig.authorName.toLowerCase();
+
+                                            if (!subjectCN) return null;
+
+                                            const parts = subjectCN.trim().split(/\s+/);
+                                            if (parts.length !== 2) {
+                                                if (subjectCN !== authorName) {
+                                                    return {
+                                                        authorId: sig.authorId,
+                                                        authorName,
+                                                        subjectCN,
+                                                    };
+                                                }
+                                                return null;
+                                            }
+
+                                            const [first, second] = parts;
+
+                                            const combinations = [
+                                                `${first} ${second}`,
+                                                `${second} ${first}`,
+                                            ];
+                                            if (!combinations.includes(authorName)) {
                                                 return {
                                                     authorId: sig.authorId,
-                                                    authorName: sig.authorName,
-                                                    subjectCN: subjectCN,
+                                                    authorName,
+                                                    subjectCN,
                                                 };
                                             }
+
                                             return null;
                                         })
                                         .filter(Boolean);
 
                                     return (
                                         <>
-                                            {missing.length === 0 && extra.length === 0 && (
+                                            {(missing.length === 0 && extra.length === 0 && !anyInvalidCert) && (
                                                 <p className="verify-success">✅ {t('all-signed')}</p>
+                                            )}
+
+                                            {(anyInvalidCert) && (
+                                                <div className="verify-failure">
+                                                    ❌ {t('cert-invalid')}
+                                                </div>
                                             )}
 
                                             {missing.length > 0 && (

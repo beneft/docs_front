@@ -90,6 +90,16 @@
 .document-settings h2 {
     margin-bottom: 1rem;
 }
+.expiration-field {
+    display: flex;
+    flex-direction: column;
+    width: 80px;
+}
+
+.exp-input-label {
+    font-size: 0.85rem;
+    margin-bottom: 0.2rem;
+}
 .floating-btn-group {
     position: absolute;
     top: 1rem;

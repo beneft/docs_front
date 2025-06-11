@@ -52,5 +52,11 @@
   "nav-basket-archive": "Архив",
   "nav-basket-deleted": "Удаленные",
   "nav-templates": "Шаблоны",
-  "nav-help": "Помощь"
+  "nav-help": "Помощь",
+  "exp-period": "Период действия (оставте 0 для бессрочных)",
+  "exp-days": "Дней",
+  "exp-years": "Лет",
+  "exp-months": "Месяцев",
+  "exp-date": "Документ действует до",
+  "exp-undefined": "Бессрочно"
 }
