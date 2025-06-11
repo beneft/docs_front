@@ -10,6 +10,8 @@ import type { Signer } from '../components/SignerList';
 import WordPreview from "../components/WordPreview";
 import { useAuth } from '../context/AuthContext';
 import UserProfilePanel from '../components/UserInfo';
+import { useTranslation } from 'react-i18next';
+import LanguageSwitcher from '../components/LanguageSwitcher';
 
 export interface SignerDTO {
     userId: string;
@@ -21,6 +23,7 @@ export interface SignerDTO {
 }
 
 const Profile: React.FC = () => {
+    const { t } = useTranslation('profile');
     const [selected, setSelected] = useState<string | null>(null);
     const [basketOpen, setBasketOpen] = useState(false);
     const [uploadedFile, setUploadedFile] = useState<File | null>(null);
@@ -98,7 +101,7 @@ const Profile: React.FC = () => {
     const fetchDocumentMetadata = async () => {
         const token = getAccessToken();
         if (!token || !user?.id) {
-            console.warn("No access token or user—cannot fetch documents");
+            console.warn("No access token or user — cannot fetch documents");
             return;
         }
 
@@ -217,7 +220,7 @@ const Profile: React.FC = () => {
         setLoading(true);
         const token = getAccessToken();
         if (!uploadedFile || !documentName) {
-            alert('Please upload a file and name it.');
+            alert(t('please-upload'));
             setLoading(false);
             return;
         }
@@ -225,7 +228,7 @@ const Profile: React.FC = () => {
         const originalName = uploadedFile.name;
         const extensionMatch = originalName.match(/\.(docx|pdf)$/i);
         if (!extensionMatch) {
-            alert('Only .docx and .pdf files are supported.');
+            alert(t('only-doc-pdf'));
             setLoading(false);
             return;
         }
@@ -241,7 +244,7 @@ const Profile: React.FC = () => {
             id = await idResponse.text();
         } catch (err) {
             console.error(err);
-            alert('Could not generate document ID');
+            alert(t('fail-gen-id'));
             setLoading(false);
             return;
         }
@@ -309,14 +312,14 @@ const Profile: React.FC = () => {
             //     alert("Failed to initiate signing process");
             // }
 
-            alert('Document uploaded successfully!');
+            alert(t('upload-success'));
             clearDocument();
             fetchDocumentMetadata();
             setSelected('Drafts');
             setBasketOpen(true);
         } catch (err) {
             console.error(err);
-            alert('Error uploading document');
+            alert(t('upload-error'));
         } finally {
             setLoading(false);
         }
@@ -354,14 +357,14 @@ const Profile: React.FC = () => {
 
             if (!response.ok) throw new Error("Failed to edit document data.");
 
-            alert("Document data saved to drafts!");
+            alert(t('drafts-saved'));
             clearDocument();
             fetchDocumentMetadata();
             setSelected('Drafts');
             setBasketOpen(true);
         } catch (err) {
             console.error(err);
-            alert("Failed to update document data.");
+            alert(t('drafts-fail'));
         }
     }
 
@@ -389,14 +392,14 @@ const Profile: React.FC = () => {
 
             if (!response.ok) throw new Error("Failed to start signing process");
 
-            alert("Signing process started successfully!");
+            alert(t('process-success'));
             clearDocument();
             fetchDocumentMetadata();
             setSelected('Sent');
             setBasketOpen(true);
         } catch (err) {
             console.error(err);
-            alert("Failed to initiate signing process");
+            alert(t('process-failed'));
         }
     };
 
@@ -459,7 +462,7 @@ const Profile: React.FC = () => {
             }
             return (
                 <div className="document-settings">
-                    <h2>Document Settings</h2>
+                    <h2>{t('doc-settings')}</h2>
                     {/*<label><input type="checkbox" /> Confidential</label><br />*/}
                     {/*<label><input type="checkbox" /> Requires Signature</label><br />*/}
                     {/*<label><input type="checkbox" /> Send Notification</label><br />*/}
@@ -498,7 +501,7 @@ const Profile: React.FC = () => {
                     {/* Sign button shown only if current user can sign */}
                     {currentCanSign && (
                         <>
-                            <button className="floating-sign-btn" onClick={() => setShowSignModal(true)}>Sign</button>
+                            <button className="floating-sign-btn" onClick={() => setShowSignModal(true)}>{t('sign-btn')}</button>
                             {showSignModal && openedDocument && (
                                 <SignModal
                                     onClose={() => handleSigning()}
@@ -516,7 +519,7 @@ const Profile: React.FC = () => {
                             className="floating-download-btn"
                             download
                         >
-                            Download
+                            {t('download-btn')}
                         </a>
                     )}
                     </div>
@@ -579,7 +582,7 @@ const Profile: React.FC = () => {
             )
         }
         else {
-            return <div className="placeholder">Select an option from the left panel</div>;
+            return <div className="placeholder">{t('unselected-prompt')}</div>;
         }
     };
 
@@ -587,21 +590,21 @@ const Profile: React.FC = () => {
         if (uploadView && documentUrl){
             return (
                 <div className="right-controls">
-                    <button onClick={clearDocument}>Clear</button>
+                    <button onClick={clearDocument}>{t('clear')}</button>
                     <input
                         type="text"
                         placeholder="Name your document"
                         value={documentName}
                         onChange={(e) => setDocumentName(e.target.value)}
                     />
-                    <button onClick={() => proceedToDrafts()}>Proceed</button>
+                    <button onClick={() => proceedToDrafts()}>{t('proceed')}</button>
                 </div>
             );
         }
         if (documentStep === 1 && documentUrl) {
             return (
                 <div className="right-controls">
-                    <button onClick={clearDocument}>Clear</button>
+                    <button onClick={clearDocument}>{t('clear')}</button>
                     <input
                         type="text"
                         placeholder="Name your document"
@@ -609,24 +612,24 @@ const Profile: React.FC = () => {
                         onChange={(e) => setDocumentName(e.target.value)}
                         disabled={true}
                     />
-                    <button onClick={() => setDocumentStep(2)}>Proceed</button>
+                    <button onClick={() => setDocumentStep(2)}>{t('proceed')}</button>
                 </div>
             );
         } else if (documentStep === 2) {
             return (
                 <div className="right-controls">
-                    <button onClick={() => setDocumentStep(1)}>Back to step 1</button>
-                    <p><br></br>Almost done. Click below to finish and save to Drafts.</p>
-                    <button onClick={saveEditedSigners}>Save & Exit</button>
-                    <button onClick={startApprovalProcess}>Finish{loading && <span className="spinner" />}</button>
+                    <button onClick={() => setDocumentStep(1)}>{t('back-to-1')}</button>
+                    <p><br></br>{t('almost-done')}</p>
+                    <button onClick={saveEditedSigners}>{t('save-exit')}</button>
+                    <button onClick={startApprovalProcess}>{t('finish')}{loading && <span className="spinner" />}</button>
                 </div>
             );
         } else if (openedDocument) {
             return (
                 <div className="right-controls">
-                    <button className="back-button" onClick={() => clearDocument()}>← Back to list</button>
+                    <button className="back-button" onClick={() => clearDocument()}>{t('back-list-btn')}</button>
                     <h2 className='signHeader'>{openedDocument.name}</h2>
-                    <h3>Signees</h3>
+                    <h3>{t('signees-title')}</h3>
                     <ul className="signer-list">
                         {(signersFromServer ?? []).map((signee, index) => {
                             const isYou = user?.id === signee.userId;
@@ -636,16 +639,16 @@ const Profile: React.FC = () => {
                                     : waitingTurn ? "🕓"
                                         : "⏳";
 
-                            const statusText = signee.status === "SIGNED" ? "Signed"
-                                : signee.status === "DECLINED" ? "Declined"
-                                    : waitingTurn ? "Waiting"
-                                        : "Pending";
+                            const statusText = signee.status === "SIGNED" ? t('status-signed')
+                                : signee.status === "DECLINED" ? t('status-declined')
+                                    : waitingTurn ? t('status-waiting')
+                                        : t('status-pending');
                             return (
                                 <li key={index} className={`signer-item ${waitingTurn ? "signer-disabled" : ""}`}>
                                     <div className="signer-main">
                                         <div className="signer-left">
                                             <strong className="signer-name">
-                                                {isYou ? "You" : signee.fullName}
+                                                {isYou ? t('you') : signee.fullName}
                                             </strong>
                                             <div className="signer-info">
                                                 <span className="signer-email">{signee.email}</span> |{" "}
@@ -653,8 +656,8 @@ const Profile: React.FC = () => {
                                             </div>
                                             {!isYou && (
                                                 <div className="signer-actions">
-                                                    <button>Edit Deputy</button>
-                                                    <button>Contact</button>
+                                                    <button>{t('edit-deputy')}</button>
+                                                    <button>{t('contact')}</button>
                                                 </div>
                                             )}
                                         </div>
@@ -671,8 +674,8 @@ const Profile: React.FC = () => {
         } else if (openedTemplate && templateFields.length > 0) {
             return (
                 <div className="right-controls">
-                    <button className="back-button" onClick={() => setOpenedTemplate(null)}>← Back</button>
-                    <h2>Fill Template Fields</h2>
+                    <button className="back-button" onClick={() => setOpenedTemplate(null)}>{t('back-btn')}</button>
+                    <h2>{t('fill-template')}</h2>
                     {templateFields.map(field => (
                         <div key={field.name} className="field-input">
                             <label>{field.name}</label>
@@ -693,18 +696,18 @@ const Profile: React.FC = () => {
                                 body: JSON.stringify(fieldValues),
                             });
                             if (!res.ok) throw new Error('Failed to submit');
-                            alert('Template successfully filled!');
+                            alert(t('template-success'));
                             setOpenedTemplate(null);
                             clearDocument();
                             await fetchDocumentMetadata();
                             setSelected('Drafts');
                             setBasketOpen(true);
                         } catch (e) {
-                            alert('Error submitting template');
+                            alert(t('template-error'));
                             console.error(e);
                         }
                     }}>
-                        Submit
+                        {t('submit-btn')}
                     </button>
                 </div>
             );
@@ -717,28 +720,31 @@ const Profile: React.FC = () => {
             {/* LEFT PANEL */}
             <div className="profile-nav">
                 <div className="nav-logo">DocFlow</div>
-                <a className="back-button" href="/">← Back</a>
+                <a className="back-button" href="/">{t('back-btn')}</a>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '' }}>
+                    <LanguageSwitcher />
+                </div>
                 {user && <div className="nav-logo">{user.firstName} {user.lastName}</div>}
                 {documentStep ? (
                     <div className="step-header">
-                        <p>📄 Document Creation</p>
-                        <strong><br></br>Step {documentStep}: {documentStep === 1 ? 'Verify Document' : 'Settings'}</strong>
+                        <p>📄 {t('doc-create-title')}</p>
+                        <strong><br></br>{t('step')} {documentStep}: {documentStep === 1 ? t('step-verify') : t('step-setup')}</strong>
                     </div>
                 ) : (
                     <>
                         <button onClick={() => handleSectionSelect('info')}
-                                className={selected === 'info' ? 'active' : ''}>User Info</button>
+                                className={selected === 'info' ? 'active' : ''}>{t('nav-userinfo')}</button>
                         <button onClick={() => handleSectionSelect('create')}
-                                className={selected === 'create' ? 'active' : ''}>Create Document</button>
+                                className={selected === 'create' ? 'active' : ''}>{t('nav-create-doc')}</button>
                         <button onClick={() => handleSectionSelect('verify')}
-                                className={selected === 'verify' ? 'active' : ''}>Verify Document</button>
+                                className={selected === 'verify' ? 'active' : ''}>{t('nav-verify-doc')}</button>
 
                         <div className="dropdown">
                             <button
                                 className={`dropdown-toggle ${basketOpen ? 'open' : ''}`}
                                 onClick={() => setBasketOpen(!basketOpen)}
                             >
-                                Paper Basket
+                                {t('nav-basket')}
                                 <span className={`dropdown-icon ${basketOpen ? 'open' : ''}`}>▼</span>
                             </button>
 
@@ -749,16 +755,16 @@ const Profile: React.FC = () => {
                                         className={selected === item ? 'active' : ''}
                                         onClick={() => handleSectionSelect(item)}
                                     >
-                                        {item}
+                                        {t('nav-basket-'+item.toLowerCase())}
                                     </button>
                                 ))}
                             </div>
                         </div>
 
                         <button onClick={() => handleSectionSelect('templates')}
-                                className={selected === 'templates' ? 'active' : ''}>Templates</button>
+                                className={selected === 'templates' ? 'active' : ''}>{t('nav-templates')}</button>
                         <button onClick={() => handleSectionSelect('help')}
-                                className={selected === 'help' ? 'active' : ''}>Help</button>
+                                className={selected === 'help' ? 'active' : ''}>{t('nav-help')}</button>
                     </>
                 )}
             </div>

@@ -1,0 +1,30 @@
+{
+  "edit-signer": "Edit Signer",
+  "delete-signer": "Delete Signer",
+  "deputy-btn": "Deputy",
+  "user-found": "User found and fields filled.",
+  "user-not-found": "User not found.",
+  "signers": {
+    "title": "Signers",
+    "iWillSign": "I will sign",
+    "sequentialSigning": "Sequential signing",
+    "addSigner": "Add Signer",
+    "editSigner": "Edit Signer",
+    "name": "Name",
+    "email": "Email",
+    "position": "Position",
+    "findByEmail": "Find by Email",
+    "save": "Save",
+    "cancel": "Cancel"
+  },
+  "deputy": {
+    "forSigner": "Deputies for Signer",
+    "edit": "Edit",
+    "delete": "Delete",
+    "editDeputy": "Edit Deputy",
+    "addDeputy": "Add Deputy",
+    "save": "Save",
+    "add": "Add",
+    "close": "Close"
+  }
+}

@@ -1,9 +1,11 @@
-import React, {useEffect, useState} from 'react';
+import React, { useEffect, useState } from 'react';
 import '../styles/Login.css';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 const Login: React.FC = () => {
+    const { t } = useTranslation('login');
     const { login } = useAuth();
     const navigate = useNavigate();
 
@@ -22,13 +24,13 @@ const Login: React.FC = () => {
                 body: JSON.stringify({ email, password }),
             });
 
-            if (!response.ok) throw new Error('Invalid credentials');
+            if (!response.ok) throw new Error(t('errorInvalidCredentials'));
 
             const data = await response.json();
             await login(data);
             navigate('/');
         } catch (err: any) {
-            setError(err.message || 'Login failed');
+            setError(err.message || t('errorLoginFailed'));
         }
     };
 
@@ -41,23 +43,23 @@ const Login: React.FC = () => {
                 body: JSON.stringify({ email }),
             });
 
-            if (!response.ok) throw new Error('Failed to send restore link');
+            if (!response.ok) throw new Error(t('errorRestoreFailed'));
 
             setRestoreSent(true);
             setError(null);
         } catch (err: any) {
-            setError(err.message || 'Restore failed');
+            setError(err.message || t('errorRestoreFailed'));
         }
     };
 
     return (
         <div className="auth-container">
-            <a className="back" href="/">Back to main page</a>
-            <h2>{isRestoreMode ? 'Restore Password' : 'Welcome Back'}</h2>
+            <a className="back" href="/">{t('back')}</a>
+            <h2>{isRestoreMode ? t('restoreTitle') : t('loginTitle')}</h2>
 
             {!isRestoreMode ? (
                 <form className="auth-form" onSubmit={handleLogin}>
-                    <label>Email</label>
+                    <label>{t('email')}</label>
                     <input
                         type="email"
                         value={email}
@@ -66,36 +68,36 @@ const Login: React.FC = () => {
                         placeholder="you@example.com"
                     />
 
-                    <label>Password</label>
+                    <label>{t('password')}</label>
                     <input
                         type="password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
-                        placeholder="Enter password"
+                        placeholder={t('passwordPlaceholder')}
                     />
 
                     {error && <div className="auth-error">{error}</div>}
 
-                    <button type="submit">Login</button>
+                    <button type="submit">{t('login')}</button>
 
                     <p className="auth-footer">
-                        Don’t have an account? <a href="/register">Register here</a><br/>
-                        Forgot password? <button
+                        {t('noAccount')} <a href="/register">{t('register')}</a><br />
+                        {t('forgot')} <button
                         type="button"
                         className="auth-link-button"
                         onClick={() => {
                             setError(null);
                             setIsRestoreMode(true);
                         }}
-                    >Restore password</button>
+                    >{t('restore')}</button>
                     </p>
                 </form>
             ) : (
                 <form className="auth-form" onSubmit={handleRestore}>
                     {!restoreSent ? (
                         <>
-                            <label>Enter your email to restore password</label>
+                            <label>{t('restoreInstruction')}</label>
                             <input
                                 type="email"
                                 value={email}
@@ -104,16 +106,16 @@ const Login: React.FC = () => {
                                 placeholder="you@example.com"
                             />
                             {error && <div className="auth-error">{error}</div>}
-                            <button type="submit">Send Restore Link</button>
+                            <button type="submit">{t('sendRestore')}</button>
                         </>
                     ) : (
                         <>
-                            <p className="auth-success">✅ A restore link has been sent to your email.</p>
+                            <p className="auth-success">✅ {t('restoreSuccess')}</p>
                             <button type="button" onClick={() => {
                                 setIsRestoreMode(false);
                                 setRestoreSent(false);
                                 setEmail('');
-                            }}>Back to Login</button>
+                            }}>{t('backToLogin')}</button>
                         </>
                     )}
                 </form>

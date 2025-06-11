@@ -1,0 +1,34 @@
+{
+  "arrow-left": "←",
+  "arrow-right": "→",
+  "title": "Your Agenda",
+  "doc": "Doc",
+  "from": "From",
+  "status": "Status",
+  "awaiting": "Awaiting Signature",
+  "go-profile": "Go to Profile",
+
+  "create-account": "Create Free Account",
+  "no-cc": "No credit card required. Cancel anytime.",
+
+  "multi-sign-title": "Multiple Ways to Sign",
+  "multi-sign-desc": "QR codes, apps, and more.",
+  "sequential-title": "Sequential & Multi-Signing",
+  "sequential-desc": "Assign roles and control the flow.",
+  "template-title": "Templates & Live Editing",
+  "template-desc": "Create and reuse smart document templates.",
+
+  "copyright": "© 2025 DocFlow Inc. All rights reserved.",
+
+  "hero-title": "Document Flow System",
+  "hero-subtitle": "Manage, sign, and collaborate on documents effortlessly.",
+
+  "verify": "Verify signed document",
+  "news": "News",
+  "pricing": "Pricing",
+  "about": "About Us",
+  "profile": "Profile",
+  "logout": "Logout",
+  "login": "Login",
+  "start": "Start for Free"
+}

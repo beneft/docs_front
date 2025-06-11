@@ -1,0 +1,18 @@
+{
+  "err-pass-do-not-match": "Пароли не совпадают.",
+  "register-success": "Аккаунт был успешно создан!",
+  "reg-fail": "Регистрация прервана ошибкой.",
+  "back": "Назад на главную",
+  "create-header": "Создание нового аккаунта",
+  "fname": "Имя",
+  "lname": "Фамилия",
+  "email": "Email",
+  "password": "Пароль",
+  "confirm-password": "Подтверждение пароля",
+  "organization": "Организация",
+  "position": "Должность",
+  "phone": "Телефон",
+  "register-button": "Зарегестрироваться",
+  "already-have-account": "Уже зарегестрированы?",
+  "login-here": "Войти здесь"
+}

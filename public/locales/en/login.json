@@ -1,0 +1,20 @@
+{
+  "back": "Back to main page",
+  "loginTitle": "Welcome Back",
+  "restoreTitle": "Restore Password",
+  "email": "Email",
+  "password": "Password",
+  "passwordPlaceholder": "Enter password",
+  "login": "Login",
+  "noAccount": "Don’t have an account?",
+  "register": "Register here",
+  "forgot": "Forgot password?",
+  "restore": "Restore password",
+  "restoreInstruction": "Enter your email to restore password",
+  "sendRestore": "Send Restore Link",
+  "restoreSuccess": "A restore link has been sent to your email.",
+  "backToLogin": "Back to Login",
+  "errorInvalidCredentials": "Invalid credentials",
+  "errorLoginFailed": "Login failed",
+  "errorRestoreFailed": "Failed to send restore link"
+}

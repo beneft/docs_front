@@ -1,0 +1,16 @@
+{
+  "cannot-load-doc": "Невозможно загрузить документ.",
+  "loading-doc": "Закгрузка документа...",
+  "doc-not-found": "Документ не найден.",
+  "sign-btn": "Подписать",
+  "download-btn": "Скачать",
+  "signees-title": "Список подписывающих",
+  "status-signed": "Подписано",
+  "status-declined": "Отклонено",
+  "status-waiting": "На очереди",
+  "status-pending": "Ожидание",
+  "deputy-of": "Заместитель",
+  "you": "Вы",
+  "contact": "Связаться",
+  "back-btn": "← На главную"
+}

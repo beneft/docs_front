@@ -20,7 +20,6 @@ const WordPreview: React.FC<WordPreviewProps> = ({ fileUrl, full }) => {
                 containerRef.current!.innerHTML = ''; // clear previous content
                 try {
                     await renderAsync(arrayBuffer, containerRef.current!);
-                    // Adjust container height to content height if needed
                     const height = containerRef.current!.getBoundingClientRect().height;
                     containerRef.current!.style.height = `${height}px`;
                 } catch (e) {

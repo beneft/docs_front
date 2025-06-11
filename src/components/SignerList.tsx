@@ -3,6 +3,7 @@ import { useDrag, useDrop, DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { useAuth } from '../context/AuthContext';
 import "./SignerList.css";
+import { useTranslation } from 'react-i18next';
 
 export type Signer = {
     id: string;
@@ -58,6 +59,7 @@ const DraggableSigner: React.FC<DraggableSignerProps> = ({
                                                              onOpenDeputy,
                                                          }) => {
     const ref = useRef<HTMLLIElement>(null);
+    const { t } = useTranslation('signerlist');
 
     const [, drop] = useDrop({
         accept: ItemTypes.SIGNER,
@@ -68,17 +70,12 @@ const DraggableSigner: React.FC<DraggableSignerProps> = ({
 
             if (dragIndex === hoverIndex) return;
 
-            // Determine rectangle on screen
             const hoverBoundingRect = ref.current.getBoundingClientRect();
-            // Get vertical middle
             const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
-            // Determine mouse position
             const clientOffset = monitor.getClientOffset();
             if (!clientOffset) return;
-            // Get pixels to the top
             const hoverClientY = clientOffset.y - hoverBoundingRect.top;
 
-            // Only perform the move when the mouse has crossed half of the item's height
             if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) return;
             if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) return;
 
@@ -112,13 +109,13 @@ const DraggableSigner: React.FC<DraggableSignerProps> = ({
             </div>
 
             <div className="signers-buttons">
-                <button className="signerlist-button" onClick={() => onEdit(signer.id)}>Edit Signer</button>
-                <button className="signerlist-button" onClick={() => onDelete(signer.id)}>Delete Signer</button>
+                <button className="signerlist-button" onClick={() => onEdit(signer.id)}>{t('edit-signer')}</button>
+                <button className="signerlist-button" onClick={() => onDelete(signer.id)}>{t('delete-signer')}</button>
                 {/*<button className="signerlist-button" onClick={() => onOpenDeputy(signer.id)}>*/}
                 {/*    Deputies ({signer.deputies.length})*/}
                 {/*</button>*/}
                 <button className="signerlist-button" onClick={() => onOpenDeputy(signer.id)}>
-                    Deputy ({signer.deputy ? 1 : 0})
+                    {t('deputy-btn')} ({signer.deputy ? 1 : 0})
                 </button>
             </div>
         </li>
@@ -127,6 +124,7 @@ const DraggableSigner: React.FC<DraggableSignerProps> = ({
 
 const SignerList: React.FC<SignerListProps> = ({ signers, setSigners , sequentialSigning, setSequentialSigning} ) => {
     const { user } = useAuth();
+    const { t } = useTranslation('signerlist');
     const [fetchedSigners, setFetchedSigners] = useState(false);
     useEffect(() => {
         console.log(signers);
@@ -151,10 +149,8 @@ const SignerList: React.FC<SignerListProps> = ({ signers, setSigners , sequentia
     const [findMessage, setFindMessage] = useState<string | null>(null);
     const [foundUserId, setFoundUserId] = useState<string | null>(null);
 
-    // Form state for signer modal
     const [form, setForm] = useState({ fullName: "", email: "", position: ""});
 
-    // Deputy editing form state
     const [deputyForm, setDeputyForm] = useState({ name: "", email: "" });
     const [isEditingDeputy, setIsEditingDeputy] = useState(false);
 
@@ -169,7 +165,7 @@ const SignerList: React.FC<SignerListProps> = ({ signers, setSigners , sequentia
                 return rest; // remove order if not sequential
             });
     };
-    // Move signer in list (for drag and drop)
+    // (for drag and drop)
     const moveSigner = (dragIndex: number, hoverIndex: number) => {
         setSigners((prevSigners) => {
             const newSigners = [...prevSigners];
@@ -196,7 +192,7 @@ const SignerList: React.FC<SignerListProps> = ({ signers, setSigners , sequentia
     const findUserByEmail = async () => {
         try {
             const response = await fetch(`http://localhost:8081/api/profile/by-email?email=${encodeURIComponent(form.email)}&exact=true`);
-            if (!response.ok) throw new Error("User not found");
+            if (!response.ok) throw new Error(t('user-not-found'));
             const data = await response.json();
             setForm({
                 fullName: data.firstName + " " + data.lastName,
@@ -204,9 +200,9 @@ const SignerList: React.FC<SignerListProps> = ({ signers, setSigners , sequentia
                 position: data.position || ""
             });
             setFoundUserId(data.id);
-            setFindMessage("✅ User found and fields filled.");
+            setFindMessage("✅ " + t('user-found'));
         } catch (error) {
-            setFindMessage("❌ User not found.");
+            setFindMessage("❌ " + t('user-not-found'));
         }
     };
 
@@ -305,18 +301,21 @@ const SignerList: React.FC<SignerListProps> = ({ signers, setSigners , sequentia
     return (
         <DndProvider backend={HTML5Backend}>
             <div className="signer-list-container">
-                <h3 className="signerlist-h3">Signers</h3>
+                <h3 className="signerlist-h3">{t('signers.title')}</h3>
 
                 <div className="signerlist-checkboxes">
                     <label>
-                        <input className="signerlist-input" type="checkbox" checked={iWillSign} onChange={toggleIWillSign} /> I will sign
+                        <input className="signerlist-input" type="checkbox" checked={iWillSign} onChange={toggleIWillSign} />
+                        {t('signers.iWillSign')}
                     </label>
                     <label>
-                        <input className="signerlist-input"
-                               type="checkbox"
-                               checked={sequentialSigning}
-                               onChange={() => setSequentialSigning(!sequentialSigning)}
-                        /> Sequential signing
+                        <input
+                            className="signerlist-input"
+                            type="checkbox"
+                            checked={sequentialSigning}
+                            onChange={() => setSequentialSigning(!sequentialSigning)}
+                        />
+                        {t('signers.sequentialSigning')}
                     </label>
                 </div>
 
@@ -335,34 +334,43 @@ const SignerList: React.FC<SignerListProps> = ({ signers, setSigners , sequentia
                     ))}
                 </ul>
 
-                <button className="signerlist-button" onClick={() => openSignerModal()}>Add Signer</button>
+                <button className="signerlist-button" onClick={() => openSignerModal()}>
+                    {t('signers.addSigner')}
+                </button>
 
                 {/* Signer Modal */}
                 {showSignerModal && (
                     <div className="signerlist-modal">
                         <div className="signerlist-modal-content">
-                            <h4>{editingSignerId ? "Edit Signer" : "Add Signer"}</h4>
-                            <input className="signerlist-input"
-                                   placeholder="Name"
-                                   value={form.fullName}
-                                   onChange={(e) => setForm({ ...form, fullName: e.target.value })}
+                            <h4>{editingSignerId ? t('signers.editSigner') : t('signers.addSigner')}</h4>
+                            <input
+                                className="signerlist-input"
+                                placeholder={t('signers.name')}
+                                value={form.fullName}
+                                onChange={(e) => setForm({ ...form, fullName: e.target.value })}
                             />
-                            <input className="signerlist-input"
-                                   placeholder="Email"
-                                   value={form.email}
-                                   onChange={(e) => setForm({ ...form, email: e.target.value })}
+                            <input
+                                className="signerlist-input"
+                                placeholder={t('signers.email')}
+                                value={form.email}
+                                onChange={(e) => setForm({ ...form, email: e.target.value })}
                             />
-                            <button onClick={findUserByEmail}>Find by Email</button>
-                            <input className="signerlist-input"
-                                   placeholder="Position"
-                                   value={form.position}
-                                   onChange={(e) => setForm({ ...form, position: e.target.value })}
+                            <button onClick={findUserByEmail}>{t('signers.findByEmail')}</button>
+                            <input
+                                className="signerlist-input"
+                                placeholder={t('signers.position')}
+                                value={form.position}
+                                onChange={(e) => setForm({ ...form, position: e.target.value })}
                             />
 
                             {findMessage && <p>{findMessage}</p>}
 
-                            <button className="signerlist-button" onClick={saveSigner}>Save</button>
-                            <button className="signerlist-button" onClick={() => setShowSignerModal(false)}>Cancel</button>
+                            <button className="signerlist-button" onClick={saveSigner}>
+                                {t('signers.save')}
+                            </button>
+                            <button className="signerlist-button" onClick={() => setShowSignerModal(false)}>
+                                {t('signers.cancel')}
+                            </button>
                         </div>
                     </div>
                 )}
@@ -371,7 +379,7 @@ const SignerList: React.FC<SignerListProps> = ({ signers, setSigners , sequentia
                 {showDeputyModal && editingDeputySignerId && (
                     <div className="signerlist-modal">
                         <div className="signerlist-modal-content">
-                            <h4>Deputies for Signer</h4>
+                            <h4>{t('deputy.forSigner')}</h4>
                             <ul>
                                 {(() => {
                                     const signer = signers.find((s) => s.id === editingDeputySignerId);
@@ -379,40 +387,49 @@ const SignerList: React.FC<SignerListProps> = ({ signers, setSigners , sequentia
                                     return deputy ? [deputy].map((d) => (
                                         <li key={d.id}>
                                             {d.name} ({d.email})
-                                            <button className="signerlist-button" onClick={() => startEditDeputy()}>Edit</button>
-                                            <button className="signerlist-button" onClick={() => deleteDeputy()}>Delete</button>
+                                            <button className="signerlist-button" onClick={() => startEditDeputy()}>
+                                                {t('deputy.edit')}
+                                            </button>
+                                            <button className="signerlist-button" onClick={() => deleteDeputy()}>
+                                                {t('deputy.delete')}
+                                            </button>
                                         </li>
                                     )) : null;
                                 })()}
-                                    {/* .deputies.map((d) => (*/}
-                                    {/*     <li key={d.id}>*/}
-                                    {/*         {d.name} ({d.iin})*/}
-                                    {/*         <button className="signerlist-button" onClick={() => startEditDeputy(d)}>Edit</button>*/}
-                                    {/*         <button className="signerlist-button"onClick={() => deleteDeputy(d.id)}>Delete</button>*/}
-                                    {/*     </li>*/}
-                                    {/* ))}*/}
+                                {/* .deputies.map((d) => (
+                             <li key={d.id}>
+                                 {d.name} ({d.iin})
+                                 <button className="signerlist-button" onClick={() => startEditDeputy(d)}>Edit</button>
+                                 <button className="signerlist-button"onClick={() => deleteDeputy(d.id)}>Delete</button>
+                             </li>
+                         ))*/}
                             </ul>
 
-                            <h5>{isEditingDeputy ? "Edit Deputy" : "Add Deputy"}</h5>
-                            <input className="signerlist-input"
-                                   placeholder="Name"
-                                   value={deputyForm.name}
-                                   onChange={(e) => setDeputyForm({ ...deputyForm, name: e.target.value })}
+                            <h5>{isEditingDeputy ? t('deputy.editDeputy') : t('deputy.addDeputy')}</h5>
+                            <input
+                                className="signerlist-input"
+                                placeholder={t('signers.name')}
+                                value={deputyForm.name}
+                                onChange={(e) => setDeputyForm({ ...deputyForm, name: e.target.value })}
                             />
-                            <input className="signerlist-input"
-                                   placeholder="Email"
-                                   value={deputyForm.email}
-                                   onChange={(e) => setDeputyForm({ ...deputyForm, email: e.target.value })}
+                            <input
+                                className="signerlist-input"
+                                placeholder={t('signers.email')}
+                                value={deputyForm.email}
+                                onChange={(e) => setDeputyForm({ ...deputyForm, email: e.target.value })}
                             />
-                            <button className="signerlist-button" onClick={addOrEditDeputy}>{isEditingDeputy ? "Save" : "Add"}</button>
-                            <button className="signerlist-button"
-                                    onClick={() => {
-                                        setShowDeputyModal(false);
-                                        setIsEditingDeputy(false);
-                                        setDeputyForm({ name: "", email: "" });
-                                    }}
+                            <button className="signerlist-button" onClick={addOrEditDeputy}>
+                                {isEditingDeputy ? t('deputy.save') : t('deputy.add')}
+                            </button>
+                            <button
+                                className="signerlist-button"
+                                onClick={() => {
+                                    setShowDeputyModal(false);
+                                    setIsEditingDeputy(false);
+                                    setDeputyForm({ name: "", email: "" });
+                                }}
                             >
-                                Close
+                                {t('deputy.close')}
                             </button>
                         </div>
                     </div>

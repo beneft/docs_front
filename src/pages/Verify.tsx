@@ -4,6 +4,7 @@ import '../styles/Profile.css';
 import '../styles/Verify.css';
 import WordPreview from "../components/WordPreview";
 import { SignerDTO } from "./Profile";
+import { useTranslation } from 'react-i18next';
 
 interface SignatureDTO {
     documentId: string;
@@ -50,6 +51,7 @@ interface V2VerificationResponse {
 }
 
 const Verify: React.FC = () => {
+    const { t } = useTranslation('verify');
     const [file, setFile] = useState<File | null>(null);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const [docType, setDocType] = useState<string | null>(null);
@@ -92,7 +94,7 @@ const Verify: React.FC = () => {
         const documentId = match?.[1];
 
         if (!documentId) {
-            alert("Document ID not found in file name.");
+            alert(t('doc-id-not-found'));
             setLoading(false);
             return;
         }
@@ -109,7 +111,7 @@ const Verify: React.FC = () => {
 
             const result = await res.json();
             if (!Array.isArray(result) || result.length === 0) {
-                alert('No signatures found.');
+                alert(t('no-v2-found'));
                 setVerifyResultV2([]);
                 return;
             }
@@ -131,7 +133,7 @@ const Verify: React.FC = () => {
                 setVerificationUsedFallback(true);
                 setVerifyResult(fallbackResult);
             } catch (fallbackError) {
-                alert('Both V2 and fallback verification failed.');
+                alert(t('both-failed'));
             }
         } finally {
             setLoading(false);
@@ -152,12 +154,12 @@ const Verify: React.FC = () => {
         <div className="profile-page">
             <div className="profile-nav profile-nav-verify">
                 <div className="nav-logo">DocFlow</div>
-                <a className="back-button" href="/">← Back</a>
+                <a className="back-button" href="/">{t('back-btn')}</a>
                 {verifyResultV2 ? (
                     <>
-                        <h2>Verification Results (V2)</h2>
+                        <h2>{t('verify-result-v2')}</h2>
                         {verifyResultV2.length === 0 ? (
-                            <p className="verify-no-signatures">No signatures found.</p>
+                            <p className="verify-no-signatures">{t('no-signs-found')}</p>
                         ) : (
                             <ul className="verify-signer-list">
                                 {verifyResultV2.map((sig, index) => {
@@ -171,12 +173,12 @@ const Verify: React.FC = () => {
 
                                     return (
                                         <li key={index} className={`verify-signer-item ${valid ? "verified" : "verify-invalid"}`}>
-                                            <strong>{sig.authorName} | {subject?.commonName} | IIN: {subject?.iin}</strong><br />
-                                            Organization: {subject?.organization ?? "N/A"}<br />
-                                            Signed: {tspTime ? new Date(tspTime).toLocaleString() : "Unknown"}<br />
-                                            Valid From: {cert?.notBefore ? new Date(cert.notBefore).toLocaleDateString() : "?"}<br />
-                                            Valid To: {cert?.notAfter ? new Date(cert.notAfter).toLocaleDateString() : "?"}<br />
-                                            Certificate: {valid ? "Valid" : "Invalid"}
+                                            <strong>{sig.authorName} | {subject?.commonName} | {t('cms-iin')}: {subject?.iin}</strong><br />
+                                            {t('cms-org')}: {subject?.organization ?? "N/A"}<br />
+                                            {t('cms-signed-date')}: {tspTime ? new Date(tspTime).toLocaleString() : t('cms-unknown')}<br />
+                                            {t('cert-valid-from')}: {cert?.notBefore ? new Date(cert.notBefore).toLocaleDateString() : "?"}<br />
+                                            {t('cert-valid-to')}: {cert?.notAfter ? new Date(cert.notAfter).toLocaleDateString() : "?"}<br />
+                                            {t('cert-status')}: {valid ? t('cert-valid') : t('cert-invalid')}
                                         </li>
                                     );
                                 })}
@@ -190,17 +192,17 @@ const Verify: React.FC = () => {
                                     const extra = verifiedIds.filter(v => !signersFromServer.some(s => s.userId === v));
 
                                     if (missing.length === 0 && extra.length === 0) {
-                                        return <p className="verify-success">✅ All expected signers have valid signatures. Document is verified.</p>;
+                                        return <p className="verify-success">✅ {t('all-signed')}</p>;
                                     } else {
                                         return (
                                             <>
                                                 {missing.length > 0 && (
                                                     <div className="verify-warning">
-                                                        ⚠️ Missing Signatures from:
+                                                        ⚠️ {t('missing-signs')}:
                                                         <ul className="verify-signer-list">
                                                             {missing.map(m => (
                                                                 <li className="verify-signer-item verify-invalid" key={m.userId}>
-                                                                    {m.fullName} ({m.email}) - Status: {m.status}
+                                                                    {m.fullName} ({m.email}) - {t('missing-status')}: {m.status}
                                                                 </li>
                                                             ))}
                                                         </ul>
@@ -209,11 +211,11 @@ const Verify: React.FC = () => {
 
                                                 {extra.length > 0 && (
                                                     <div className="verify-warning">
-                                                        ⚠️ Unknown signers present:
+                                                        ⚠️ {t('unknown-signs')}:
                                                         <ul className="verify-signer-list">
                                                             {extra.map((id, i) => (
                                                                 <li className="verify-signer-item verify-invalid" key={i}>
-                                                                    Signer with ID {id} was not expected
+                                                                    {t('unknown-1')} {id} {t('unknown-2')}
                                                                 </li>
                                                             ))}
                                                         </ul>
@@ -225,36 +227,36 @@ const Verify: React.FC = () => {
                                 })()}
                             </div>
                         )}
-                        <button onClick={handleClear} className="verify-clear">Clear</button>
+                        <button onClick={handleClear} className="verify-clear">{t('clear-btn')}</button>
                     </>
                 ) : verifyResult && verifyResult.signatures ? (
                         <>
-                            <h2>Verification Results</h2>
+                            <h2>{t('verify-result-v1')}</h2>
                             <ul className="verify-signer-list">
                                 {verifyResult.signatures.map((sig: SignatureDTO, index: number) => (
                                     <li key={index} className={`verify-signer-item ${sig.cmsValid ? "verified" : "invalid"}`}>
                                         <strong>{sig.authorName}</strong><br />
-                                        Signed: {new Date(sig.signingDate).toLocaleString()}<br />
-                                        Organization: {sig.authorOrganization}<br />
-                                        Certificate: {sig.cmsValid ? "Valid" : "Invalid"}
+                                        {t('cms-signed-date')}: {new Date(sig.signingDate).toLocaleString()}<br />
+                                        {t('cms-org')}: {sig.authorOrganization}<br />
+                                        {t('cert-status')}: {sig.cmsValid ? t('cert-valid') : t('cert-invalid')}
                                     </li>
                                 ))}
                             </ul>
-                            <p><strong>CMS Valid:</strong> {verifyResult.cmsValid ? "✅ Yes" : "❌ No"}</p>
-                            <p><strong>Uploaded by User ID:</strong> {verifyResult.uploaderId}</p>
-                            <p><strong>Upload Date:</strong> {new Date(verifyResult.createdDate).toLocaleString()}</p>
-                            <button onClick={handleClear} className="verify-clear">Clear</button>
+                            <p><strong>{t('verify-old-valid')}:</strong> {verifyResult.cmsValid ? "✅ Yes" : "❌ No"}</p>
+                            <p><strong>{t('verify-old-uploader')}:</strong> {verifyResult.uploaderId}</p>
+                            <p><strong>{t('verify-old-date')}:</strong> {new Date(verifyResult.createdDate).toLocaleString()}</p>
+                            <button onClick={handleClear} className="verify-clear">{t('clear-btn')}</button>
                         </>
                     ) : (<>
-                    <h2>Verify a Document</h2>
+                    <h2>{t('verify-title')}</h2>
                     <p className="instructions">
-                        Upload a signed document to verify its signatures and certificates.
+                        {t('verify-instructions')}
                     </p>
                     {file && (
                         <div className="verify-button">
-                            <p>You have uploaded a document "{file.name}".</p>
-                            <button className="verify-verify" onClick={handleVerify}>Verify{loading && <span className="spinner" />}</button>
-                            <button className="verify-clear" onClick={handleClear}>Clear</button>
+                            <p>{t('have-uploaded')} "{file.name}".</p>
+                            <button className="verify-verify" onClick={handleVerify}>{t('verify-btn')}{loading && <span className="spinner" />}</button>
+                            <button className="verify-clear" onClick={handleClear}>{t('clear-btn')}</button>
                         </div>
                     )}
                 </>)}

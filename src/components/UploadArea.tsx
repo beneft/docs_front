@@ -1,7 +1,9 @@
 import React, { useState, useRef } from 'react';
 import './UploadArea.css';
+import { useTranslation } from 'react-i18next';
 
 const UploadArea: React.FC<{ onUpload: (file: File, url: string, fileType: string) => void }> = ({ onUpload }) => {
+    const { t } = useTranslation('uploadarea');
     const [fileUrl, setFileUrl] = useState<string | null>(null);
     const [dragging, setDragging] = useState(false);
     const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -63,9 +65,9 @@ const UploadArea: React.FC<{ onUpload: (file: File, url: string, fileType: strin
                     onClick={handleClick}
                 >
                     <p className="upload-icon">📤</p>
-                    <p className="upload-text">Upload a file</p>
-                    <p>Drag and drop your document here</p>
-                    <p>or click to upload</p>
+                    <p className="upload-text">{t('upload-file')}</p>
+                    <p>{t('drag-drop-here')}</p>
+                    <p>{t('or-click')}</p>
                     <input
                         type="file"
                         accept=".pdf,.doc,.docx"
@@ -77,9 +79,9 @@ const UploadArea: React.FC<{ onUpload: (file: File, url: string, fileType: strin
             ) : (
                 <div className="preview-container">
                     <div className="preview-toolbar">
-                        <button onClick={reset}>Clear</button>
+                        <button onClick={reset}>{t('clear')}</button>
                         <label>
-                            <button onClick={handleClick}>Reselect</button>
+                            <button onClick={handleClick}>{t('reselect')}</button>
                             <input
                                 type="file"
                                 accept=".pdf,.doc,.docx"
@@ -93,7 +95,7 @@ const UploadArea: React.FC<{ onUpload: (file: File, url: string, fileType: strin
                         <iframe src={fileUrl} className="preview-frame" title="Preview" />
                     ) : (
                         <div className="preview-message">
-                            <p>Preview not available for this file type.</p>
+                            <p>{t('preview-unavailable')}</p>
                         </div>
                     )}
                 </div>

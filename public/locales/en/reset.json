@@ -1,0 +1,11 @@
+{
+  "back": "Back to main page",
+  "title": "Reset Your Password",
+  "newPassword": "New Password",
+  "confirmPassword": "Confirm New Password",
+  "reset": "Reset Password",
+  "success": "Password updated successfully. Redirecting…",
+  "errorMissingToken": "Invalid or missing token.",
+  "errorMismatch": "Passwords do not match.",
+  "errorResetFailed": "Password reset failed"
+}

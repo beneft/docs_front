@@ -1,0 +1,18 @@
+{
+  "err-pass-do-not-match": "Passwords do not match.",
+  "register-success": "You have successfully created an account!",
+  "reg-fail": "Registration failed.",
+  "back": "Back to main page",
+  "create-header": "Create Your Account",
+  "fname": "First Name",
+  "lname": "Last Name",
+  "email": "Email",
+  "password": "Password",
+  "confirm-password": "Confirm Password",
+  "organization": "Organization",
+  "position": "Position",
+  "phone": "Phone",
+  "register-button": "Register",
+  "already-have-account": "Already have an account?",
+  "login-here": "Login here"
+}

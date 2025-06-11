@@ -2,10 +2,12 @@ import React , {useEffect, useState} from 'react';
 import '../styles/Register.css';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 const Register: React.FC = () => {
     const { login } = useAuth();
     const navigate = useNavigate();
+    const { t } = useTranslation('register');
 
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -21,7 +23,7 @@ const Register: React.FC = () => {
         e.preventDefault();
 
         if (password !== confirmPassword) {
-            setError("Passwords do not match");
+            setError(t('err-pass-do-not-match'));
             return;
         }
 
@@ -41,10 +43,10 @@ const Register: React.FC = () => {
             });
 
             if (!response.ok) {
-                throw new Error('Registration failed');
+                throw new Error('Registration failed.');
             }
 
-            alert('You have successfully created an account!');
+            alert(t('register-success'));
             navigate('/');
         } catch (err: any) {
             setError(err.message || 'Registration failed');
@@ -53,39 +55,39 @@ const Register: React.FC = () => {
 
     return (
         <div className="auth-container">
-            <a className="back" href="/">Back to main page</a>
-            <h2>Create Your Account</h2>
+            <a className="back" href="/">{t('back')}</a>
+            <h2>{t('create-header')}</h2>
             <form className="auth-form" onSubmit={handleRegister}>
-                <label>First Name</label>
+                <label>{t('fname')}</label>
                 <input type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
 
-                <label>Last Name</label>
+                <label>{t('lname')}</label>
                 <input type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} required />
 
-                <label>Email</label>
+                <label>{t('email')}</label>
                 <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
 
-                <label>Password</label>
+                <label>{t('password')}</label>
                 <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
 
-                <label>Confirm Password</label>
+                <label>{t('confirm-password')}</label>
                 <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required />
 
-                <label>Organization</label>
+                <label>{t('organization')}</label>
                 <input type="text" value={organization} onChange={(e) => setOrganization(e.target.value)} />
 
-                <label>Position</label>
+                <label>{t('position')}</label>
                 <input type="text" value={position} onChange={(e) => setPosition(e.target.value)} />
 
-                <label>Phone</label>
+                <label>{t('phone')}</label>
                 <input type="text" value={phone} onChange={(e) => setPhone(e.target.value)} />
 
                 {error && <div className="auth-error">{error}</div>}
 
-                <button type="submit">Register</button>
+                <button type="submit">{t('register-button')}</button>
             </form>
             <p className="auth-footer">
-                Already have an account? <a href="/login">Login here</a>
+                {t('already-have-account')} <a href="/login">{t('login-here')}</a>
             </p>
         </div>
     );

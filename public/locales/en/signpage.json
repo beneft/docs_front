@@ -1,0 +1,16 @@
+{
+  "cannot-load-doc": "Could not load document.",
+  "loading-doc": "Loading document...",
+  "doc-not-found": "Document not found.",
+  "sign-btn": "Sign",
+  "download-btn": "Download",
+  "signees-title": "Signees",
+  "status-signed": "Signed",
+  "status-declined": "Declined",
+  "status-waiting": "Waiting",
+  "status-pending": "Pending",
+  "deputy-of": "Deputy of",
+  "you": "You",
+  "contact": "Contact",
+  "back-btn": "← Back"
+}

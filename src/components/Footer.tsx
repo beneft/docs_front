@@ -1,10 +1,13 @@
 import React from 'react';
 import './Footer.css';
+import { useTranslation } from 'react-i18next';
 
 const Footer: React.FC = () => {
+    const { t } = useTranslation('home');
+
     return (
         <footer className="footer">
-            <p>© 2025 DocFlow Inc. All rights reserved.</p>
+            <p>{t('copyright')}</p>
         </footer>
     );
 };

@@ -6,8 +6,11 @@ import type { DocumentItem } from '../components/PaperBasketSection';
 import SignerList from "../components/SignerList";
 import WordPreview from "../components/WordPreview";
 import { SignerDTO } from "./Profile";
+import { useTranslation } from 'react-i18next';
+import LanguageSwitcher from '../components/LanguageSwitcher';
 
 const SignPage: React.FC = () => {
+    const { t } = useTranslation('signpage');
     const { id, mail } = useParams<{ id: string; mail: string }>();
     const [openedDocument, setOpenedDocument] = useState<DocumentItem | null>(null);
     const [showSignModal, setShowSignModal] = useState(false);
@@ -38,7 +41,7 @@ const SignPage: React.FC = () => {
             setOpenedDocument(document);
         } catch (err) {
             console.error('Failed to load document:', err);
-            alert('Could not load document.');
+            alert(t('cannot-load-doc'));
         } finally {
             setLoading(false);
         }
@@ -98,8 +101,8 @@ const SignPage: React.FC = () => {
     }
 
     const renderContent = () => {
-        if (loading) return <div className="loading">Loading document...</div>;
-        if (!openedDocument) return <div className="error">Document not found.</div>;
+        if (loading) return <div className="loading">{t('loading-doc')}</div>;
+        if (!openedDocument) return <div className="error">{t('doc-not-found')}</div>;
 
         const isDocFile = openedDocument.contentType === 'application/msword' ||
             openedDocument.contentType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
@@ -125,7 +128,7 @@ const SignPage: React.FC = () => {
                 <div className="floating-btn-group">
                 {currentCanSign && (
                     <>
-                        <button className="floating-sign-btn" onClick={() => setShowSignModal(true)}>Sign</button>
+                        <button className="floating-sign-btn" onClick={() => setShowSignModal(true)}>{t('sign-btn')}</button>
                         {showSignModal && openedDocument && (
                             <SignModal
                                 onClose={() => handleSigning()}
@@ -143,7 +146,7 @@ const SignPage: React.FC = () => {
                         className="floating-download-btn"
                         download
                     >
-                        Download
+                        {t('download-btn')}
                     </a>
                 )}
                 </div>
@@ -157,7 +160,7 @@ const SignPage: React.FC = () => {
         return (
             <div className="right-controls">
                 <h2 className='signHeader'>{openedDocument.name}</h2>
-                <h3>Signees</h3>
+                <h3>{t('signees-title')}</h3>
                 <ul className="signer-list">
                     {(signersFromServer ?? []).map((signee, index) => {
                         const isYou = currentSigner?.email === signee.email;
@@ -167,10 +170,10 @@ const SignPage: React.FC = () => {
                                 : waitingTurn ? "🕓"
                                     : "⏳";
 
-                        const statusText = signee.status === "SIGNED" ? "Signed"
-                            : signee.status === "DECLINED" ? "Declined"
-                                : waitingTurn ? "Waiting"
-                                    : "Pending";
+                        const statusText = signee.status === "SIGNED" ? t('status-signed')
+                            : signee.status === "DECLINED" ? t('status-declined')
+                                : waitingTurn ? t('status-waiting')
+                                    : t('status-pending');
                         return (
                             <li key={index} className={`signer-item ${waitingTurn ? "signer-disabled" : ""}`}>
                                 <div className="signer-main">
@@ -178,8 +181,8 @@ const SignPage: React.FC = () => {
                                         <strong className="signer-name">
                                             {isYou ? (
                                                 actingAsDeputy && originalDeputyData
-                                                    ? `Deputy of ${signee.fullName} (${originalDeputyData})`
-                                                    : "You"
+                                                    ? t('deputy-of')+` ${signee.fullName} (${originalDeputyData})`
+                                                    : t('you')
                                             ) : signee.fullName}
                                         </strong>
                                         <div className="signer-info">
@@ -188,7 +191,7 @@ const SignPage: React.FC = () => {
                                         </div>
                                         {!isYou && (
                                             <div className="signer-actions">
-                                                <button>Contact</button>
+                                                <button>{t('contact')}</button>
                                             </div>
                                         )}
                                     </div>
@@ -208,7 +211,10 @@ const SignPage: React.FC = () => {
         <div className="profile-page">
             <div className="profile-nav">
                 <div className="nav-logo">DocFlow</div>
-                <a className="back-button" href="/">← Back</a>
+                <a className="back-button" href="/">{t('back-btn')}</a>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '' }}>
+                    <LanguageSwitcher />
+                </div>
             </div>
             <div className="profile-content">
                 {renderContent()}

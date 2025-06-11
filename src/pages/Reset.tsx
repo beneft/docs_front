@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import '../styles/Register.css';
+import { useTranslation } from 'react-i18next';
 
 const ResetPassword: React.FC = () => {
+    const { t } = useTranslation('reset');
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
     const token = searchParams.get('token');
@@ -16,12 +18,12 @@ const ResetPassword: React.FC = () => {
         e.preventDefault();
 
         if (!token) {
-            setError('Invalid or missing token.');
+            setError(t('errorMissingToken'));
             return;
         }
 
         if (newPassword !== confirmPassword) {
-            setError('Passwords do not match');
+            setError(t('errorMismatch'));
             return;
         }
 
@@ -34,22 +36,22 @@ const ResetPassword: React.FC = () => {
 
             if (!response.ok) {
                 const body = await response.text();
-                throw new Error(body || 'Password reset failed');
+                throw new Error(body || t('errorResetFailed'));
             }
 
             setSuccess(true);
             setTimeout(() => navigate('/login'), 2000);
         } catch (err: any) {
-            setError(err.message || 'Password reset failed');
+            setError(err.message || t('errorResetFailed'));
         }
     };
 
     return (
         <div className="auth-container">
-            <a className="back" href="/">Back to main page</a>
-            <h2>Reset Your Password</h2>
+            <a className="back" href="/">{t('back')}</a>
+            <h2>{t('title')}</h2>
             <form className="auth-form" onSubmit={handleReset}>
-                <label>New Password</label>
+                <label>{t('newPassword')}</label>
                 <input
                     type="password"
                     value={newPassword}
@@ -57,7 +59,7 @@ const ResetPassword: React.FC = () => {
                     required
                 />
 
-                <label>Confirm New Password</label>
+                <label>{t('confirmPassword')}</label>
                 <input
                     type="password"
                     value={confirmPassword}
@@ -66,9 +68,9 @@ const ResetPassword: React.FC = () => {
                 />
 
                 {error && <div className="auth-error">{error}</div>}
-                {success && <div className="auth-success">Password updated successfully. Redirecting…</div>}
+                {success && <div className="auth-success">{t('success')}</div>}
 
-                <button type="submit">Reset Password</button>
+                <button type="submit">{t('reset')}</button>
             </form>
         </div>
     );

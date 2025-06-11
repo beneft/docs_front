@@ -1,6 +1,7 @@
-import React, { useState} from 'react';
-import { User , useAuth} from '../context/AuthContext';
+import React, { useState } from 'react';
+import { User, useAuth } from '../context/AuthContext';
 import './UserInfo.css';
+import { useTranslation } from 'react-i18next';
 
 export const UserProfilePanel = ({ user }: { user: User }) => {
     const [editing, setEditing] = useState(false);
@@ -10,6 +11,7 @@ export const UserProfilePanel = ({ user }: { user: User }) => {
     const [newPassword, setNewPassword] = useState('');
     const [confirmNewPassword, setConfirmNewPassword] = useState('');
     const { refresh, getAccessToken } = useAuth();
+    const { t } = useTranslation('userinfo');
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -19,7 +21,7 @@ export const UserProfilePanel = ({ user }: { user: User }) => {
         e.preventDefault();
 
         if (changingPassword && newPassword !== confirmNewPassword) {
-            alert("New passwords do not match");
+            alert(t('pass-not-match'));
             return;
         }
 
@@ -33,7 +35,7 @@ export const UserProfilePanel = ({ user }: { user: User }) => {
                 body: JSON.stringify(formData),
             });
 
-            if (!profileRes.ok) throw new Error("Profile update failed");
+            if (!profileRes.ok) throw new Error(t('profile-update-failed'));
 
             if (changingPassword) {
                 const passRes = await fetch("http://localhost:8081/api/auth/password", {
@@ -51,11 +53,11 @@ export const UserProfilePanel = ({ user }: { user: User }) => {
 
                 if (!passRes.ok) {
                     const body = await passRes.text();
-                    throw new Error(body || "Password change failed");
+                    throw new Error(body || t('password-change-failed'));
                 }
             }
 
-            alert("Profile updated successfully");
+            alert(t('profile-update-success'));
             await refresh();
             setEditing(false);
             setChangingPassword(false);
@@ -63,38 +65,38 @@ export const UserProfilePanel = ({ user }: { user: User }) => {
             setNewPassword('');
             setConfirmNewPassword('');
         } catch (err: any) {
-            alert(err.message || "Update failed");
+            alert(err.message || t('update-failed'));
             console.error(err);
         }
     };
 
     return (
         <div className="userinfo-panel">
-            <h2 className="userinfo-heading">User Profile</h2>
+            <h2 className="userinfo-heading">{t('profile-title')}</h2>
 
             <div className="userinfo-grid">
-                <ProfileField label="Email" value={user.email} />
-                <ProfileField label="First Name" value={user.firstName} />
-                <ProfileField label="Last Name" value={user.lastName} />
-                <ProfileField label="Organization" value={user.organization} />
-                <ProfileField label="Position" value={user.position} />
-                <ProfileField label="Phone" value={user.phone} />
+                <ProfileField label={t('email')} value={user.email} />
+                <ProfileField label={t('first-name')} value={user.firstName} />
+                <ProfileField label={t('last-name')} value={user.lastName} />
+                <ProfileField label={t('organization')} value={user.organization} />
+                <ProfileField label={t('position')} value={user.position} />
+                <ProfileField label={t('phone')} value={user.phone} />
             </div>
 
             <button className="userinfo-edit-btn" onClick={() => setEditing(true)}>
-                Edit
+                {t('edit')}
             </button>
 
             {editing && (
                 <form onSubmit={handleSubmit} className="userinfo-form">
-                    <h3>Edit Profile</h3>
+                    <h3>{t('edit-profile')}</h3>
                     <div className="userinfo-form-grid">
-                        <Input label="First Name" name="firstName" value={formData.firstName} onChange={handleChange} />
-                        <Input label="Last Name" name="lastName" value={formData.lastName} onChange={handleChange} />
-                        <Input label="Organization" name="organization" value={formData.organization} onChange={handleChange} />
-                        <Input label="Position" name="position" value={formData.position} onChange={handleChange} />
-                        <Input label="Phone" name="phone" value={formData.phone} onChange={handleChange} />
-                        <Input label="Email (read-only)" name="email" value={formData.email} readOnly />
+                        <Input label={t('first-name')} name="firstName" value={formData.firstName} onChange={handleChange} />
+                        <Input label={t('last-name')} name="lastName" value={formData.lastName} onChange={handleChange} />
+                        <Input label={t('organization')} name="organization" value={formData.organization} onChange={handleChange} />
+                        <Input label={t('position')} name="position" value={formData.position} onChange={handleChange} />
+                        <Input label={t('phone')} name="phone" value={formData.phone} onChange={handleChange} />
+                        <Input label={t('email-readonly')} name="email" value={formData.email} readOnly />
                     </div>
 
                     {!changingPassword && (
@@ -103,25 +105,25 @@ export const UserProfilePanel = ({ user }: { user: User }) => {
                             className="userinfo-change-password-btn"
                             onClick={() => setChangingPassword(true)}
                         >
-                            Change Password
+                            {t('change-password')}
                         </button>
                     )}
 
                     {changingPassword && (
                         <div className="userinfo-password-section">
-                            <InputPassword label="Old Password" value={oldPassword} onChange={setOldPassword} />
-                            <InputPassword label="New Password" value={newPassword} onChange={setNewPassword} />
-                            <InputPassword label="Confirm New Password" value={confirmNewPassword} onChange={setConfirmNewPassword} />
+                            <InputPassword label={t('old-password')} value={oldPassword} onChange={setOldPassword} />
+                            <InputPassword label={t('new-password')} value={newPassword} onChange={setNewPassword} />
+                            <InputPassword label={t('confirm-new-password')} value={confirmNewPassword} onChange={setConfirmNewPassword} />
                         </div>
                     )}
 
                     <div className="userinfo-btn-row">
-                        <button type="submit" className="userinfo-submit-btn">Confirm</button>
+                        <button type="submit" className="userinfo-submit-btn">{t('confirm')}</button>
                         <button type="button" className="userinfo-cancel-btn" onClick={() => {
                             setEditing(false);
                             setChangingPassword(false);
                         }}>
-                            Cancel
+                            {t('cancel')}
                         </button>
                     </div>
                 </form>
@@ -130,12 +132,15 @@ export const UserProfilePanel = ({ user }: { user: User }) => {
     );
 };
 
-const ProfileField = ({ label, value }: { label: string; value: string }) => (
-    <div className="userinfo-field">
-        <div className="userinfo-label">{label}</div>
-        <div className="userinfo-value">{value || "—"}</div>
-    </div>
-);
+const ProfileField = ({ label, value }: { label: string; value: string }) => {
+    const { t } = useTranslation('userinfo');
+    return (
+        <div className="userinfo-field">
+            <div className="userinfo-label">{label}</div>
+            <div className="userinfo-value">{value || t('empty-placeholder')}</div>
+        </div>
+    );
+};
 
 const Input = ({
                    label,

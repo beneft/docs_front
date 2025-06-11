@@ -1,0 +1,10 @@
+{
+  "edsTab": "EDS",
+  "qrTab": "eGov QR",
+  "instructionsLabel": "Instructions:",
+  "instructionsText": "This is a test environment for the document flow system, so I am expecting that you are familiar with NCALayer and how it functions.",
+  "openNCA": "Open NCALayer",
+  "signError": "Signing or posting failed.",
+  "qrInstructions": "Scan this QR code with your mobile eGov app to sign the document:",
+  "qrPlaceholder": "[QR CODE]"
+}
