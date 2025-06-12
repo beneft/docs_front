@@ -7,6 +7,7 @@ import Profile from './pages/Profile';
 import SignPage from "./pages/SignPage";
 import Verify from "./pages/Verify";
 import ResetPassword from "./pages/Reset";
+import EmailVerification from "./pages/EmailVerification";
 
 const App: React.FC = () => {
   return (
@@ -19,6 +20,7 @@ const App: React.FC = () => {
               <Route path="/sign/:id/:mail" element={<SignPage />} />
               <Route path="/verify" element={<Verify />} />
               <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/api/email/confirm" element={<EmailVerification />} />
           </Routes>
       </Router>
   );

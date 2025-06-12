@@ -20,5 +20,6 @@
   "err-short-password": "Password must be at least 6 characters.",
   "err-register-failed": "Registration failed.",
   "loading": "Registering",
-  "iin": "IIN"
+  "iin": "IIN",
+  "register-confirmation-sent": "A confirmation link was sent to your email. Please verify it to complete registration."
 }

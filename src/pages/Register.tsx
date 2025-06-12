@@ -20,6 +20,7 @@ const Register: React.FC = () => {
     const [iin, setIin] = useState('');
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
+    const [registered, setRegistered] = useState(false);
 
     const validateEmail = (email: string) =>
         /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -66,8 +67,9 @@ const Register: React.FC = () => {
                 throw new Error(data?.message || t('err-register-failed'));
             }
 
-            alert(t('register-success'));
-            navigate('/');
+            // alert(t('register-success'));
+            // navigate('/');
+            setRegistered(true);
         } catch (err: any) {
             setError(err.message || t('err-register-failed'));
         } finally {
@@ -79,6 +81,9 @@ const Register: React.FC = () => {
         <div className="auth-container">
             <a className="back" href="/">{t('back')}</a>
             <h2>{t('create-header')}</h2>
+            {registered ? (
+                <p>{t('register-confirmation-sent')}</p>
+            ) : ( <>
             <form className="auth-form" onSubmit={handleRegister}>
                 <label>{t('fname')}</label>
                 <input type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
@@ -115,6 +120,8 @@ const Register: React.FC = () => {
             <p className="auth-footer">
                 {t('already-have-account')} <a href="/login">{t('login-here')}</a>
             </p>
+                </>
+                )}
         </div>
     );
 };

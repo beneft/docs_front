@@ -1,0 +1,8 @@
+{
+  "verifying": "Verifying email...",
+  "success": "Email verification successful!",
+  "failed": "Verification failed or link expired.",
+  "go-to-login": "Go to login",
+  "no-code": "Verification code is missing in the URL.",
+  "network-error": "Network error. Try again later."
+}

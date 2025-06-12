@@ -735,11 +735,6 @@ const Profile: React.FC = () => {
                     <button onClick={startApprovalProcess}>{t('finish')}{loading && <span className="spinner" />}</button>
                 </div>
             );
-        //}
-        //else if (['Sent','Received','Closed'].includes(selected || '')) {
-            // return (
-            //     <p>sleep</p>
-            // );
         } else if (openedDocument) {
             return (
                 <div className="right-controls">
@@ -827,6 +822,10 @@ const Profile: React.FC = () => {
                         {t('submit-btn')}
                     </button>
                 </div>
+            );
+        } else if (['Sent','Received','Closed'].includes(selected || '')) {
+            return (
+                <p>sleep</p>
             );
         }
         return null;
