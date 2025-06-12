@@ -13,6 +13,7 @@ import UserProfilePanel from '../components/UserInfo';
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import TagManager from "../components/TagManager";
+import TagFilter from "../components/TagFilter";
 
 export interface SignerDTO {
     userId: string;
@@ -112,19 +113,19 @@ const Profile: React.FC = () => {
         fetchDocumentMetadata();
     }, []);
 
-    const fetchDocumentMetadata = async () => {
+    const fetchDocumentMetadata = async (tags: string[] = []) => {
         const token = getAccessToken();
         if (!token || !user?.id) {
             console.warn("No access token or user — cannot fetch documents");
             return;
         }
 
+        const tagParams = tags.map(t => `tags=${encodeURIComponent(t.trim().replace(/^"+|"+$/g, ''))}`).join('&');
+
         try {
             const uploadedRes = await fetch(
-                `http://localhost:8082/documents/metadata?uploaderId=${user.id}`,
-                {
-                    headers: { Authorization: `Bearer ${token}` },
-                }
+                `http://localhost:8082/documents/metadata?uploaderId=${user.id}&${tagParams}`,
+                { headers: { Authorization: `Bearer ${token}` } }
             );
             if (!uploadedRes.ok) throw new Error("Failed to fetch uploaded documents");
             const uploadedData: { id: string; name: string; contentType: string; expirationDate: Date; status: string; type: string }[] = await uploadedRes.json();
@@ -158,7 +159,7 @@ const Profile: React.FC = () => {
             const receivedDocIds: string[] = await receivedIdsRes.json();
 
             const receivedPromises = receivedDocIds.map(id =>
-                fetch(`http://localhost:8082/documents/metadata?documentId=${id}`, {
+                fetch(`http://localhost:8082/documents/metadata?documentId=${id}&${tagParams}`, {
                     headers: { Authorization: `Bearer ${token}` },
                 }).then(res => res.ok ? res.json() : null)
             );
@@ -184,13 +185,14 @@ const Profile: React.FC = () => {
         }
     };
 
+
     useEffect(() => {
         fetchSigners();
     }, [openedDocument]);
 
     const fetchSigners = async () => {
         if (openedDocument) {
-            fetch(`http://localhost:8083/approval/${openedDocument.id}/signers`)
+            fetch(`http://localhost:8083/signatures/approval/${openedDocument.id}/signers`)
                 .then(res => res.json())
                 .then(data => {
                     setSignersFromServer(Array.isArray(data) ? data : []);
@@ -416,6 +418,7 @@ const Profile: React.FC = () => {
         }
 
         try {
+
             const responseTag = await fetch("http://localhost:8082/documents/" + documentId + "/metadata/tags", {
                 method: "PUT",
                 headers: {
@@ -444,7 +447,7 @@ const Profile: React.FC = () => {
                 }
             }
 
-            const response = await fetch("http://localhost:8083/approval/start", {
+            const response = await fetch("http://localhost:8083/signatures/approval/start", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -740,7 +743,16 @@ const Profile: React.FC = () => {
                 <div className="right-controls">
                     <button className="back-button" onClick={() => clearDocument()}>{t('back-list-btn')}</button>
                     <h2 className='signHeader'>{openedDocument.name}</h2>
-                    <p>{t('exp-date')} : {openedDocument.expirationDate?.toString() ?? t('exp-undefined')}</p>
+                    <p
+                        className={
+                            openedDocument.expirationDate &&
+                            new Date(openedDocument.expirationDate) < new Date()
+                                ? 'expired-text'
+                                : ''
+                        }
+                    >
+                        {t('exp-date')} : {openedDocument.expirationDate?.toString() ?? t('exp-undefined')}
+                    </p>
                     <h3>{t('signees-title')}</h3>
                     <ul className="signer-list">
                         {(signersFromServer ?? []).map((signee, index) => {
@@ -802,10 +814,19 @@ const Profile: React.FC = () => {
                     ))}
                     <button onClick={async () => {
                         try {
+                            const cleanedFieldValues = Object.fromEntries(
+                                templateFields.map(field => {
+                                    const rawValue = fieldValues[field.name];
+                                    const valueToUse = rawValue?.trim() === '' || rawValue === undefined ? ' ' : rawValue;
+                                    return [field.name, valueToUse];
+                                })
+                            );
+                            console.log(cleanedFieldValues);
+
                             const res = await fetch(`http://localhost:8084/templates/${openedTemplate.id}/fill?uploaderId=`+user?.id, {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify(fieldValues),
+                                body: JSON.stringify(cleanedFieldValues),
                             });
                             if (!res.ok) throw new Error('Failed to submit');
                             alert(t('template-success'));
@@ -825,8 +846,14 @@ const Profile: React.FC = () => {
             );
         } else if (['Sent','Received','Closed'].includes(selected || '')) {
             return (
-                <p>sleep</p>
-            );
+                <TagFilter
+                    userId={user!.id}
+                    token={getAccessToken()}
+                    onChange={(selectedTags) => {
+                        fetchDocumentMetadata(selectedTags);
+                    }}
+                />
+            )
         }
         return null;
     };
@@ -836,9 +863,11 @@ const Profile: React.FC = () => {
             {/* LEFT PANEL */}
             <div className="profile-nav">
                 <div className="nav-logo">DocFlow</div>
+                <div className="top-controls">
                 <a className="back-button" href="/">{t('back-btn')}</a>
-                <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '' }}>
+                <div style={{ display: 'flex', justifyContent: 'center', padding: '' }}>
                     <LanguageSwitcher />
+                </div>
                 </div>
                 {user && <div className="nav-logo">{user.firstName} {user.lastName}</div>}
                 {documentStep ? (

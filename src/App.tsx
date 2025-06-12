@@ -8,6 +8,7 @@ import SignPage from "./pages/SignPage";
 import Verify from "./pages/Verify";
 import ResetPassword from "./pages/Reset";
 import EmailVerification from "./pages/EmailVerification";
+import TwoFactorPage from "./pages/TwoFactorPage";
 
 const App: React.FC = () => {
   return (
@@ -21,6 +22,7 @@ const App: React.FC = () => {
               <Route path="/verify" element={<Verify />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/api/email/confirm" element={<EmailVerification />} />
+              <Route path="/2fa" element={<TwoFactorPage />} />
           </Routes>
       </Router>
   );

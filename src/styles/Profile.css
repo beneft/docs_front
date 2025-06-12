@@ -33,6 +33,12 @@
     margin-bottom: 0.5rem;
 }
 
+.top-controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
 .profile-nav button {
     font-size: 0.8rem;
     margin: 5px 0;
@@ -95,7 +101,10 @@
     flex-direction: column;
     width: 80px;
 }
-
+.expired-text {
+    color: red;
+    font-weight: bold;
+}
 .exp-input-label {
     font-size: 0.85rem;
     margin-bottom: 0.2rem;

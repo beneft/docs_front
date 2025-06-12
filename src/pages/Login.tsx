@@ -12,6 +12,7 @@ const Login: React.FC = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState<string | null>(null);
+    const [message, setMessage] = useState<string | null>(null);
     const [isRestoreMode, setIsRestoreMode] = useState(false);
     const [restoreSent, setRestoreSent] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
@@ -22,6 +23,7 @@ const Login: React.FC = () => {
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setError(null);
+        setMessage(null);
 
         if (!validateEmail(email)) {
             return setError(t('invalidEmail'));
@@ -33,15 +35,20 @@ const Login: React.FC = () => {
 
         setIsLoading(true);
         try {
-            const response = await fetch('http://localhost:8081/api/auth/login', {
+            const response = await fetch('http://localhost:8081/api/auth/login2fa', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, password }),
             });
 
             if (!response.ok) throw new Error(t('errorInvalidCredentials'));
-
             const data = await response.json();
+            if (data.tokenType === '' && data.accessToken?.includes('2FA')) {
+                localStorage.setItem('pending2FAEmail', email);
+                setMessage(t('checkEmailFor2FA'));
+                return;
+            }
+
             await login(data);
             navigate('/');
         } catch (err: any) {
@@ -101,6 +108,8 @@ const Login: React.FC = () => {
                     />
 
                     {error && <div className="auth-error">{error}</div>}
+
+                    {message && <div className="auth-success">{message}</div>}
 
                     <button type="submit" disabled={isLoading}>
                         {isLoading ? t('loading') : t('login')}

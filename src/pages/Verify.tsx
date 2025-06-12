@@ -70,7 +70,7 @@ const Verify: React.FC = () => {
 
     const fetchSigners = async (documentId: string) => {
         try {
-            const res = await fetch(`http://localhost:8083/approval/${documentId}/signers`);
+            const res = await fetch(`http://localhost:8083/signatures/approval/${documentId}/signers`);
             const data = await res.json();
             setSignersFromServer(Array.isArray(data) ? data : []);
         } catch (err) {

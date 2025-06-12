@@ -64,7 +64,7 @@ const SignPage: React.FC = () => {
             setCurrentSigner(null);
             return;
         }
-        fetch(`http://localhost:8083/approval/${openedDocument.id}/signers`)
+        fetch(`http://localhost:8083/signatures/approval/${openedDocument.id}/signers`)
             .then(res => res.json())
             .then(data => {
                 const signers = Array.isArray(data) ? data : [];
@@ -213,9 +213,11 @@ const SignPage: React.FC = () => {
         <div className="profile-page">
             <div className="profile-nav">
                 <div className="nav-logo">DocFlow</div>
-                <a className="back-button" href="/">{t('back-btn')}</a>
-                <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '' }}>
-                    <LanguageSwitcher />
+                <div className="top-controls">
+                    <a className="back-button" href="/">{t('back-btn')}</a>
+                    <div style={{  }}>
+                        <LanguageSwitcher />
+                    </div>
                 </div>
             </div>
             <div className="profile-content">

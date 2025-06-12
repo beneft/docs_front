@@ -13,7 +13,7 @@ const LanguageSwitcher = () => {
 
     return (
         <button className="lang-switcher" onClick={toggleLanguage}>
-            {currentLang === 'ru' ? '🇺🇸 English' : '🇷🇺 Русский'}
+            {currentLang === 'ru' ? '🇺🇸' : '🇷🇺'}
         </button>
     );
 };

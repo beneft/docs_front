@@ -23,5 +23,6 @@
   "update-failed": "Update failed",
   "error-required": "This field is required.",
   "pass-too-short": "Password must be at least 6 characters long.",
-  "iin": "IIN"
+  "iin": "IIN",
+  "enable-2fa": "Enable Two-Factor Authentication"
 }

@@ -1,0 +1,8 @@
+{
+  "2fa": {
+    "missingParams": "Missing token or email in URL.",
+    "invalidToken": "Invalid or expired token.",
+    "verificationFailed": "2FA verification failed.",
+    "verifying": "Verifying your login, please wait..."
+  }
+}

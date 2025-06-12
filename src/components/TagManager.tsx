@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useTranslation } from 'react-i18next';
 
 interface TagManagerProps {
     userId: string | null;
@@ -11,6 +12,7 @@ const TagManager: React.FC<TagManagerProps> = ({ userId, documentId, token, onSe
     const [allTags, setAllTags] = useState<string[]>([]);
     const [newTag, setNewTag] = useState('');
     const [selectedTags, setSelectedTags] = useState<string[]>([]);
+    const { t } = useTranslation('tagmanager');
 
     useEffect(() => {
         fetchTags();
@@ -68,7 +70,7 @@ const TagManager: React.FC<TagManagerProps> = ({ userId, documentId, token, onSe
 
     return (
         <div>
-            <label className="section-label">Tags:</label>
+            <label className="section-label">{t('tag-title')}:</label>
             <div className="tags-container" style={{
                 display: 'flex',
                 flexWrap: 'wrap',
@@ -115,10 +117,10 @@ const TagManager: React.FC<TagManagerProps> = ({ userId, documentId, token, onSe
                 <input
                     value={newTag}
                     onChange={(e) => setNewTag(e.target.value)}
-                    placeholder="New tag"
+                    placeholder={t('new-tag')}
                 />
                 <button onClick={addTag} style={{ marginLeft: '6px' }}>
-                    Add
+                    {t('add-btn')}
                 </button>
             </div>
         </div>

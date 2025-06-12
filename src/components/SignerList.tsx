@@ -131,9 +131,18 @@ const SignerList: React.FC<SignerListProps> = ({ signers, setSigners , sequentia
         console.log(signers);
         setFetchedSigners(false);
         if (user && signers.length === 0) {
-            setSigners([{ id: generateId(), userId:user.id, fullName: user.lastName+" "+user.firstName, email: user.email, position: user.position || "", iin: user.iin || ""}]);
+            const selfSigner = {
+                id: generateId(),
+                userId: user.id,
+                fullName: `${user.lastName} ${user.firstName}`,
+                email: user.email,
+                position: user.position || "",
+                iin: user.iin || ""
+            };
+            setSigners([selfSigner]);
+            setIWillSign(true);
             setFetchedSigners(true);
-        } else if (user && signers.length > 0 && !fetchedSigners){
+        } else if (user && signers.length > 0 && !fetchedSigners) {
             const isCurrentUserSigner = signers.some(signer => signer.userId === user!.id);
             const isSequential = signers.every(signer => signer.order !== -1 && signer.order !== undefined);
 
@@ -242,12 +251,26 @@ const SignerList: React.FC<SignerListProps> = ({ signers, setSigners , sequentia
     };
 
     const deleteSigner = (id: string) => {
-        setSigners((prev) =>
-            assignOrderIfSequential(
-                prev.filter((s) => s.id !== id),
-                sequentialSigning
-            )
-        );
+        setSigners((prev) => {
+            const updated = prev.filter((s) => s.id !== id);
+            const reassigned = assignOrderIfSequential(updated, sequentialSigning);
+            if (user && !reassigned.some(s => s.userId === user.id)) {
+                setIWillSign(false);
+            }
+            if (reassigned.length === 0 && user) {
+                const selfSigner = {
+                    id: generateId(),
+                    userId: user.id,
+                    fullName: `${user.lastName} ${user.firstName}`,
+                    email: user.email,
+                    position: user.position || "",
+                    iin: user.iin || ""
+                };
+                setIWillSign(true);
+                return [selfSigner];
+            }
+            return reassigned;
+        });
     };
 
     const openDeputyModal = (signerId: string) => {
@@ -291,32 +314,32 @@ const SignerList: React.FC<SignerListProps> = ({ signers, setSigners , sequentia
     };
 
     const toggleIWillSign = () => {
-        if (iWillSign) {
-            setSigners((prev) =>
-                assignOrderIfSequential(
-                    prev.filter((s) => s.userId !== user?.id),
-                    sequentialSigning
-                )
-            );
-            setIWillSign(false);
-        } else {
-            if (user) {
-                setSigners((prev) =>
-                    assignOrderIfSequential(
-                        [...prev, {
+        setIWillSign(prev => {
+            const newValue = !prev;
+            setSigners(prev => {
+                let updated;
+                if (newValue) {
+                    if (user && !prev.some(s => s.userId === user.id)) {
+                        const selfSigner = {
                             id: generateId(),
                             userId: user.id,
-                            fullName: user.lastName+" "+user.firstName,
+                            fullName: `${user.lastName} ${user.firstName}`,
                             email: user.email,
                             position: user.position || "",
                             iin: user.iin || ""
-                        }],
-                        sequentialSigning
-                    )
-                );
-            }
-            setIWillSign(true);
-        }
+                        };
+                        updated = [...prev, selfSigner];
+                    } else {
+                        updated = [...prev];
+                    }
+                } else {
+                    updated = prev.filter(s => s.userId !== user?.id);
+                }
+
+                return assignOrderIfSequential(updated, sequentialSigning);
+            });
+            return newValue;
+        });
     };
 
     return (

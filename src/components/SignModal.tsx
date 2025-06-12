@@ -67,7 +67,7 @@ const SignModal = ({
                                             try {
                                                 const base64 = (reader.result as string).split(',')[1];
                                                 let signature = await signDocumentWithNCALayer(base64);
-                                                console.log("Signature:", signature);
+                                                //console.log("Signature:", signature);
 
                                                 if (signature != null) {
                                                     signature = signature
@@ -75,14 +75,29 @@ const SignModal = ({
                                                         .replace(/-----END CMS-----/, '')
                                                         .replace(/\s+/g, '');
 
-                                                    const response = await fetch('http://localhost:8083/approval/sign', {
+                                                    let authorName = guest ? guest : `${user?.lastName} ${user?.firstName}`;
+                                                    let authorId = guest ? "-1" : user?.id;
+                                                    let authorEmail = guest ? guest : user?.email;
+
+                                                    if (guest) {
+                                                        const signersResponse = await fetch(`http://localhost:8083/signatures/approval/${openedDocument.id}/signers`);
+                                                        if (!signersResponse.ok) throw new Error("Failed to fetch signers");
+                                                        const signers = await signersResponse.json();
+
+                                                        const guestSigner = signers.find((s: any) => s.email === guest);
+                                                        if (guestSigner) {
+                                                            authorName = guestSigner.fullName;
+                                                        }
+                                                    }
+
+                                                    const response = await fetch('http://localhost:8083/signatures/approval/sign', {
                                                         method: 'POST',
                                                         headers: { 'Content-Type': 'application/json' },
                                                         body: JSON.stringify({
                                                             documentId: openedDocument.id,
-                                                            authorId: guest ? "-1" : user?.id,
-                                                            authorName: guest ? guest : (user?.firstName + " " + user?.lastName),
-                                                            authorEmail: guest ? guest : user?.email,
+                                                            authorId,
+                                                            authorName,
+                                                            authorEmail,
                                                             cms: signature
                                                         })
                                                     });
@@ -90,6 +105,7 @@ const SignModal = ({
                                                     if (!response.ok) {
                                                         throw new Error(`Failed to post signature: HTTP ${response.status}`);
                                                     }
+
                                                     onClose();
                                                 }
                                             } catch (err) {
@@ -99,6 +115,7 @@ const SignModal = ({
                                                 setLoading(false);
                                             }
                                         };
+
                                         reader.readAsDataURL(blob);
                                     } catch (err) {
                                         console.error("Preparation failed:", err);

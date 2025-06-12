@@ -19,5 +19,6 @@
   "errorRestoreFailed": "Failed to send restore link",
   "invalidEmail": "Please enter a valid email address.",
   "emptyPassword": "Password cannot be empty.",
-  "loading": "Please wait..."
+  "loading": "Please wait...",
+  "checkEmailFor2FA": "Check email to see account access link."
 }

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { User, useAuth } from '../context/AuthContext';
 import './UserInfo.css';
 import { useTranslation } from 'react-i18next';
@@ -14,6 +14,18 @@ export const UserProfilePanel = ({ user }: { user: User }) => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const { refresh, getAccessToken } = useAuth();
     const { t } = useTranslation('userinfo');
+    const [is2FAEnabled, setIs2FAEnabled] = useState(false);
+
+    useEffect(() => {
+        fetch(`http://localhost:8081/api/auth/2fa?userId=${user.id}`, {
+            headers: {
+                Authorization: `Bearer ${getAccessToken()}`
+            }
+        })
+            .then(res => res.json())
+            .then(setIs2FAEnabled)
+            .catch(err => console.error('Failed to fetch 2FA status', err));
+    }, [user.id, getAccessToken]);
 
     const validateForm = () => {
         const newErrors: { [key: string]: string } = {};
@@ -97,6 +109,25 @@ export const UserProfilePanel = ({ user }: { user: User }) => {
         }
     };
 
+    const handle2FAToggle = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const enabled = e.target.checked;
+        setIs2FAEnabled(enabled);
+
+        try {
+            const endpoint = enabled ? 'enable' : 'disable';
+            await fetch(`http://localhost:8081/api/auth/2fa/${endpoint}?userId=${user.id}`, {
+                method: "POST",
+                headers: {
+                    Authorization: `Bearer ${getAccessToken()}`,
+                }
+            });
+        } catch (err) {
+            console.error('2FA toggle failed', err);
+            alert(t('update-failed'));
+            setIs2FAEnabled(!enabled);
+        }
+    };
+
     return (
         <div className="userinfo-panel">
             <h2 className="userinfo-heading">{t('profile-title')}</h2>
@@ -127,7 +158,16 @@ export const UserProfilePanel = ({ user }: { user: User }) => {
                         <Input label={t('iin')} name="iin" value={formData.iin} onChange={handleChange} />
                         <Input label={t('email-readonly')} name="email" value={formData.email} readOnly />
                     </div>
-
+                    <div className="userinfo-input-group">
+                        <label className="userinfo-input-label">
+                            <input
+                                type="checkbox"
+                                checked={is2FAEnabled}
+                                onChange={handle2FAToggle}
+                            />
+                            {t('enable-2fa')}
+                        </label>
+                    </div>
                     {!changingPassword && (
                         <button
                             type="button"
