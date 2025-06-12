@@ -161,7 +161,7 @@ const Verify: React.FC = () => {
         <div className="profile-page">
             <div className="profile-nav profile-nav-verify">
                 <div className="nav-logo">DocFlow</div>
-                <a className="back-button" href="/">{t('back-btn')}</a>
+                <a className="back-button" href={localStorage.getItem('prevPage') || '/'}>{t('back-btn')}</a>
                 {verifyResultV2 ? (
                     <>
                         <h2>{t('verify-result-v2')}</h2>

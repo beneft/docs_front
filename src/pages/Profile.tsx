@@ -589,6 +589,7 @@ const Profile: React.FC = () => {
         } else if (selected === 'create') {
             return <UploadArea onUpload={handleDocumentUpload} />;
         } else if (selected === 'verify') {
+            localStorage.setItem('prevPage', "/profile")
             navigate('/verify');
         } else if (openedDocument) {
             const isDocFile = openedDocument.contentType === 'application/msword' ||

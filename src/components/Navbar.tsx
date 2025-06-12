@@ -13,7 +13,14 @@ const Navbar: React.FC = () => {
         <nav className="navbar">
             <div className="logo">DocFlow</div>
             <ul className="nav-links">
-                <li><Link to="/verify">{t('verify')}</Link></li>
+                <li>
+                    <Link
+                        to="/verify"
+                        onClick={() => localStorage.setItem('prevPage', window.location.pathname)}
+                    >
+                        {t('verify')}
+                    </Link>
+                </li>
                 <li><Link to="/news">{t('news')}</Link></li>
                 <li><Link to="/pricing">{t('pricing')}</Link></li>
                 <li><Link to="/about">{t('about')}</Link></li>
